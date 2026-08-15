@@ -7,20 +7,58 @@ const BASE = 'https://otakudesu.blog';
 
 const cache = new LRU<any>();
 
-const HEADERS = {
-  'User-Agent':
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-  'Accept-Language': 'id-ID,id;q=0.9,en;q=0.5',
-  Referer: BASE + '/',
-};
+const HEADERS = [
+  {
+    'User-Agent':
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Language': 'id-ID,id;q=0.9,en;q=0.5',
+    Referer: BASE + '/',
+  },
+  {
+    'User-Agent':
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15',
+    Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
+    Referer: BASE + '/ongoing-anime/',
+  },
+];
+
+let lastFetch = 0;
+const MIN_GAP = 500;
+
+function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+async function throttle() {
+  const wait = MIN_GAP - (Date.now() - lastFetch);
+  if (wait > 0) await sleep(wait);
+  lastFetch = Date.now();
+}
 
 async function fetchHtml(url: string): Promise<string> {
   const hit = cache.get(url);
   if (hit) return hit;
-  const { data } = await axios.get(url, { headers: HEADERS, timeout: 20000 });
-  cache.set(url, data);
-  return data;
+
+  let lastErr: unknown = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await throttle();
+    try {
+      const headers = HEADERS[attempt % HEADERS.length];
+      const { data } = await axios.get(url, { headers, timeout: 20000 });
+      cache.set(url, data);
+      return data;
+    } catch (err: any) {
+      lastErr = err;
+      if (err?.response?.status === 403 || err?.response?.status === 429) {
+        await sleep(800 * (attempt + 1));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastErr;
 }
 
 function parseLastPage($: cheerio.CheerioAPI): number {
