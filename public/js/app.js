@@ -177,19 +177,15 @@
 
     initArt();
 
-    player.querySelectorAll('.server-btn').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        player.querySelectorAll('.server-btn').forEach(function (b) {
-          b.classList.remove('active');
-          b.setAttribute('aria-pressed', 'false');
-        });
-        btn.classList.add('active');
-        btn.setAttribute('aria-pressed', 'true');
+    player.querySelectorAll('.server-select').forEach(function (sel) {
+      sel.addEventListener('change', function () {
+        var payload = sel.value;
+        if (!payload) return;
         if (loading) loading.hidden = false;
         fetch('/api/stream-resolve', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ payload: btn.getAttribute('data-payload') }),
+          body: JSON.stringify({ payload: payload }),
         })
           .then(function (r) { return r.json(); })
           .then(function (data) {

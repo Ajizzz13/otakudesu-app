@@ -31,17 +31,17 @@
       <div class="player-loading" data-loading hidden>LOADING FEED…</div>
     </div>
 
-    <% if (ep.streams.length && ep.mirrors.length) { %>
-      <p class="quota" style="margin-top:0">
-        <span class="quota-label">DEFAULT STREAM</span>
-        <span class="quota-list"><span>blogger · direct · kualitas di player</span></span>
-      </p>
-    <% } %>
-
-    <% if (ep.mirrors.length) { %>
+    <% if (groups.length) { %>
       <div class="server-row" role="group" aria-label="Server">
-        <% ep.mirrors.forEach((m, i) => { %>
-          <button class="server-btn <%= !ep.streams.length && i === 0 ? 'active' : '' %>" data-payload="<%= m.payload %>" aria-pressed="<%= !ep.streams.length && i === 0 %>"><%= m.quality %> · <%= m.server %></button>
+        <% groups.forEach((g) => { %>
+          <div class="server-group">
+            <label class="server-label" for="server-<%= g.quality.replace(/\W/g, '') %>"><%= g.quality %></label>
+            <select class="server-select" id="server-<%= g.quality.replace(/\W/g, '') %>" data-quality="<%= g.quality %>">
+              <% g.options.forEach((o) => { %>
+                <option value="<%= o.payload %>"><%= o.server %></option>
+              <% }) %>
+            </select>
+          </div>
         <% }) %>
       </div>
     <% } %>

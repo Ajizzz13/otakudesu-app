@@ -40,7 +40,22 @@ app.get('/episode/:slug', safe(async (req, res) => {
       episodes = detail.episodes;
     } catch { episodes = []; }
   }
-  res.render('episode', { ep, episodes, title: ep.title, activeSlug: req.params.slug, active: null });
+  const groups = [];
+  const order = [];
+  for (const m of ep.mirrors) {
+    if (!order.includes(m.quality)) order.push(m.quality);
+  }
+  for (const q of order) {
+    const options = [];
+    const seen = new Set();
+    for (const m of ep.mirrors) {
+      if (m.quality !== q || seen.has(m.server)) continue;
+      seen.add(m.server);
+      options.push({ server: m.server, payload: m.payload });
+    }
+    groups.push({ quality: q, options });
+  }
+  res.render('episode', { ep, episodes, groups, title: ep.title, activeSlug: req.params.slug, active: null });
 }));
 
 app.get('/search', safe(async (req, res) => {
