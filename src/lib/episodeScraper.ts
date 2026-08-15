@@ -3,36 +3,32 @@ import * as cheerio from 'cheerio';
 
 const BASE_URL = 'https://otakudesu.blog';
 
-// Scraper function to get anime episode details
-export async function getEpisodeDetail(url: string) {
+const HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+  'Referer': BASE_URL
+};
+
+export async function getEpisodeStream(slug: string) {
   try {
-    const { data } = await axios.get(url, {
-      headers: { 
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        'Referer': BASE_URL
-      }
-    });
-    
+    const { data } = await axios.get(`${BASE_URL}/episode/${slug}/`, { headers: HEADERS });
     const $ = cheerio.load(data);
-    const episodeData: any = {
-      title: $('h1').text(),
-      mirror: []
-    };
     
-    // Extract download links
-    $('.download h4').each((_, el) => {
-      const quality = $(el).text();
-      const links = $(el).next('ul').find('li').map((_, li) => ({
-        provider: $(li).find('a').text(),
-        url: $(li).find('a').attr('href')
-      })).get();
+    const title = $('h1').text().trim();
+    const streamIframe = $('#stream1 iframe, .responsive-embed-stream iframe').attr('src');
+    
+    const mirrors: any[] = [];
+    $('.mirrorstream ul li').each((_, el) => {
+      const quality = $(el).parent().prev('h3').text().trim();
+      const name = $(el).find('a').text().trim();
+      const url = $(el).find('a').attr('href');
       
-      episodeData.mirror.push({ quality, links });
+      mirrors.push({ quality, name, url });
     });
     
-    return episodeData;
+    return { title, streamIframe, mirrors };
   } catch (error) {
-    console.error('Episode Scraper Error:', error);
+    console.error('Episode Stream Error:', error);
     return null;
   }
 }

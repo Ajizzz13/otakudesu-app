@@ -1,7 +1,11 @@
 import { getAnimeDetail } from '@/lib/scraper';
 import Link from 'next/link';
 
-export default async function AnimeDetail({ params }: { params: { slug: string } }) {
+type Props = {
+  params: Promise<{ slug: string }>;
+};
+
+export default async function AnimeDetail({ params }: Props) {
   const { slug } = await params;
   const anime = await getAnimeDetail(slug);
 
