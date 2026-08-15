@@ -31,6 +31,13 @@
         <% }) %>
       </div>
     <% } %>
+
+    <% if (ep.sizes.length) { %>
+      <p class="quota">
+        <span class="quota-label">EST. QUOTA / EP</span>
+        <span class="quota-list"><% ep.sizes.forEach((s) => { %><span><%= s.quality %> ≈ <%= s.size %></span><% }) %></span>
+      </p>
+    <% } %>
   </div>
 
   <% if (episodes.length > 0) { %>
