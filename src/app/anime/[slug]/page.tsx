@@ -1,14 +1,13 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getAnimeDetail } from '@/lib/scraper';
-import SectionHead from '@/components/SectionHead';
+import EpisodeList from '@/components/EpisodeList';
 
-export const revalidate = 600;
+export const dynamic = 'force-dynamic';
 
 export default async function AnimeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const url = `https://otakudesu.blog/anime/${slug}/`;
-  const info = await getAnimeDetail(url);
+  const info = await getAnimeDetail(slug);
   if (!info) notFound();
 
   const rows: [string, string][] = [
@@ -74,26 +73,9 @@ export default async function AnimeDetailPage({ params }: { params: Promise<{ sl
       </div>
 
       <section className="mt-14">
-        <SectionHead tag="EPISODES" title={`DAFTAR EPISODE (${info.episodes.length})`} />
-        {info.episodes.length === 0 ? (
-          <div className="border border-dashed border-line rounded p-12 text-center font-mono text-sm text-accent">
-            NO EPISODE YET
-          </div>
-        ) : (
-          <ol className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            {info.episodes.map((ep) => (
-              <li key={ep.url}>
-                <a
-                  href={`/episode/${ep.url.split('/episode/')[1]?.replace(/\/$/, '')}`}
-                  className="flex items-center justify-between gap-3 px-3.5 py-2.5 bg-panel border border-line rounded hover:border-accent transition-colors"
-                >
-                  <span className="text-sm text-paper hover:text-accent transition-colors">{ep.title}</span>
-                  {ep.date && <span className="font-mono text-[10px] text-muted shrink-0">{ep.date}</span>}
-                </a>
-              </li>
-            ))}
-          </ol>
-        )}
+        <EpisodeList
+          episodes={info.episodes.map((e) => ({ title: e.title, slug: e.slug, date: e.date }))}
+        />
       </section>
     </>
   );

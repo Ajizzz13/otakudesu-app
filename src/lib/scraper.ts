@@ -1,9 +1,9 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { LRU } from './cache';
-import type { AnimeInfo, AnimeItem, EpisodeInfo, Paginated, ScheduleDay } from './types';
+import type { AnimeInfo, AnimeItem, EpisodeStream, Paginated, ScheduleDay } from './types';
 
-const BASE = 'https://otakudesu.blog';
+const BASE = (process.env.OTAKUDESU_BASE_URL || 'https://otakudesu.blog').replace(/\/$/, '');
 
 const cache = new LRU<any>();
 
@@ -69,7 +69,7 @@ function parseLastPage($: cheerio.CheerioAPI): number {
   return pages.length ? Math.max(...pages) : 1;
 }
 
-function parseThumbList(html: string, $: cheerio.CheerioAPI): AnimeItem[] {
+function parseThumbList($: cheerio.CheerioAPI): AnimeItem[] {
   const items: AnimeItem[] = [];
   $('.venz ul li').each((_, el) => {
     const li = $(el);
@@ -89,211 +89,250 @@ function parseThumbList(html: string, $: cheerio.CheerioAPI): AnimeItem[] {
   return items;
 }
 
+/* ── home ─────────────────────────────────────────── */
+
+export async function getHome(): Promise<{ ongoing: AnimeItem[]; complete: AnimeItem[] }> {
+  try {
+    const [ongoingHtml, completeHtml] = await Promise.all([
+      fetchHtml(`${BASE}/ongoing-anime/`),
+      fetchHtml(`${BASE}/complete-anime/`),
+    ]);
+    return {
+      ongoing: parseThumbList(cheerio.load(ongoingHtml)),
+      complete: parseThumbList(cheerio.load(completeHtml)),
+    };
+  } catch (err) {
+    console.error('getHome:', err);
+    return { ongoing: [], complete: [] };
+  }
+}
+
+/* ── paginated lists ───────────────────────────────── */
+
 export async function getOngoing(page = 1): Promise<Paginated<AnimeItem>> {
   try {
-  const url = `${BASE}/ongoing-anime/${page > 1 ? `page/${page}/` : ''}`;
-  const html = await fetchHtml(url);
-  const $ = cheerio.load(html);
-  return { items: parseThumbList(html, $), page, totalPages: parseLastPage($) };
+    const url = `${BASE}/ongoing-anime/${page > 1 ? `page/${page}/` : ''}`;
+    const html = await fetchHtml(url);
+    const $ = cheerio.load(html);
+    return { items: parseThumbList($), page, totalPages: parseLastPage($) };
   } catch (err) {
-    console.error("getOngoing:", err);
-    { return { items: [], page, totalPages: 1 }; }
+    console.error('getOngoing:', err);
+    return { items: [], page, totalPages: 1 };
   }
 }
 
 export async function getComplete(page = 1): Promise<Paginated<AnimeItem>> {
   try {
-  const url = `${BASE}/complete-anime/${page > 1 ? `page/${page}/` : ''}`;
-  const html = await fetchHtml(url);
-  const $ = cheerio.load(html);
-  return { items: parseThumbList(html, $), page, totalPages: parseLastPage($) };
+    const url = `${BASE}/complete-anime/${page > 1 ? `page/${page}/` : ''}`;
+    const html = await fetchHtml(url);
+    const $ = cheerio.load(html);
+    return { items: parseThumbList($), page, totalPages: parseLastPage($) };
   } catch (err) {
-    console.error("getComplete:", err);
-    { return { items: [], page, totalPages: 1 }; }
+    console.error('getComplete:', err);
+    return { items: [], page, totalPages: 1 };
   }
 }
 
 export async function getAnimeList(page = 1): Promise<Paginated<AnimeItem>> {
   try {
-  const url = `${BASE}/anime-list/${page > 1 ? `page/${page}/` : ''}`;
-  const html = await fetchHtml(url);
-  const $ = cheerio.load(html);
-  const items: AnimeItem[] = [];
-  $('.listblk ul li').each((_, el) => {
-    const a = $(el).find('a').first();
-    const url = a.attr('href') || '';
-    items.push({
-      title: a.text().trim(),
-      url,
-      slug: url.split('/anime/')[1]?.replace(/\/$/, '') || '',
-      cover: '',
+    const url = `${BASE}/anime-list/${page > 1 ? `page/${page}/` : ''}`;
+    const html = await fetchHtml(url);
+    const $ = cheerio.load(html);
+    const items: AnimeItem[] = [];
+    $('.listblk ul li').each((_, el) => {
+      const a = $(el).find('a').first();
+      const url = a.attr('href') || '';
+      items.push({
+        title: a.text().trim(),
+        url,
+        slug: url.split('/anime/')[1]?.replace(/\/$/, '') || '',
+        cover: '',
+      });
     });
-  });
-  return { items, page, totalPages: parseLastPage($) };
+    return { items, page, totalPages: parseLastPage($) };
   } catch (err) {
-    console.error("getAnimeList:", err);
-    { return { items: [], page, totalPages: 1 }; }
+    console.error('getAnimeList:', err);
+    return { items: [], page, totalPages: 1 };
   }
 }
 
+/* ── schedule & genres ─────────────────────────────── */
+
 export async function getSchedule(): Promise<ScheduleDay[]> {
   try {
-  const html = await fetchHtml(`${BASE}/jadwal-rilis/`);
-  const $ = cheerio.load(html);
-  const days: ScheduleDay[] = [];
-  $('.kgjdwl').each((_, el) => {
-    const day = $(el).find('h4').text().trim();
-    const items: { title: string; url: string }[] = [];
-    $(el).find('.kglist321 ul li').each((_, li) => {
-      const a = $(li).find('a').first();
-      items.push({ title: a.text().trim(), url: a.attr('href') || '' });
+    const html = await fetchHtml(`${BASE}/jadwal-rilis/`);
+    const $ = cheerio.load(html);
+    const days: ScheduleDay[] = [];
+    $('.kgjdwl').each((_, el) => {
+      const day = $(el).find('h4').text().trim();
+      const items: { title: string; url: string }[] = [];
+      $(el).find('.kglist321 ul li').each((_, li) => {
+        const a = $(li).find('a').first();
+        items.push({ title: a.text().trim(), url: a.attr('href') || '' });
+      });
+      if (day) days.push({ day, items });
     });
-    if (day) days.push({ day, items });
-  });
-  return days;
+    return days;
   } catch (err) {
-    console.error("getSchedule:", err);
-    { return []; }
+    console.error('getSchedule:', err);
+    return [];
   }
 }
 
 export async function getGenres(): Promise<{ name: string; url: string }[]> {
   try {
-  const html = await fetchHtml(`${BASE}/genre-list/`);
-  const $ = cheerio.load(html);
-  const genres: { name: string; url: string }[] = [];
-  $('.genres ul li').each((_, el) => {
-    const a = $(el).find('a').first();
-    genres.push({ name: a.text().trim(), url: a.attr('href') || '' });
-  });
-  return genres;
+    const html = await fetchHtml(`${BASE}/genre-list/`);
+    const $ = cheerio.load(html);
+    const genres: { name: string; url: string }[] = [];
+    $('.genres ul li').each((_, el) => {
+      const a = $(el).find('a').first();
+      genres.push({ name: a.text().trim(), url: a.attr('href') || '' });
+    });
+    return genres;
   } catch (err) {
-    console.error("getGenres:", err);
-    { return []; }
+    console.error('getGenres:', err);
+    return [];
   }
 }
 
 export async function getGenreAnime(slug: string, page = 1): Promise<Paginated<AnimeItem>> {
   try {
-  const url = `${BASE}/genres/${slug}/${page > 1 ? `page/${page}/` : ''}`;
-  const html = await fetchHtml(url);
-  const $ = cheerio.load(html);
-  return { items: parseThumbList(html, $), page, totalPages: parseLastPage($) };
+    const url = `${BASE}/genres/${slug}/${page > 1 ? `page/${page}/` : ''}`;
+    const html = await fetchHtml(url);
+    const $ = cheerio.load(html);
+    return { items: parseThumbList($), page, totalPages: parseLastPage($) };
   } catch (err) {
-    console.error("getGenreAnime:", err);
-    { return { items: [], page, totalPages: 1 }; }
+    console.error('getGenreAnime:', err);
+    return { items: [], page, totalPages: 1 };
   }
 }
+
+/* ── search ────────────────────────────────────────── */
 
 export async function searchAnime(query: string): Promise<AnimeItem[]> {
   try {
-  const url = `${BASE}/?s=${encodeURIComponent(query)}&post_type=anime`;
-  const html = await fetchHtml(url);
-  const $ = cheerio.load(html);
-  const items: AnimeItem[] = [];
-  $('.chivsrc li').each((_, el) => {
-    const li = $(el);
-    const a = li.find('a').first();
-    const url = a.attr('href') || '';
-    items.push({
-      title: li.find('h2').text().trim() || a.text().trim(),
-      cover: li.find('img').attr('src') || '',
-      url,
-      slug: url.split('/anime/')[1]?.replace(/\/$/, '') || '',
-      rating: li.find('.set').text().trim(),
-      episode: li.find('.epz').text().trim(),
+    const url = `${BASE}/?s=${encodeURIComponent(query)}&post_type=anime`;
+    const html = await fetchHtml(url);
+    const $ = cheerio.load(html);
+    const items: AnimeItem[] = [];
+    $('.chivsrc li').each((_, el) => {
+      const li = $(el);
+      const a = li.find('a').first();
+      const url = a.attr('href') || '';
+      items.push({
+        title: li.find('h2').text().trim() || a.text().trim(),
+        cover: li.find('img').attr('src') || '',
+        url,
+        slug: url.split('/anime/')[1]?.replace(/\/$/, '') || '',
+        rating: li.find('.set').text().trim(),
+        episode: li.find('.epz').text().trim(),
+      });
     });
-  });
-  return items;
+    return items;
   } catch (err) {
-    console.error("searchAnime:", err);
-    { return []; }
+    console.error('searchAnime:', err);
+    return [];
   }
 }
 
-export async function getAnimeDetail(url: string): Promise<AnimeInfo | null> {
+/* ── anime detail ──────────────────────────────────── */
+
+export async function getAnimeDetail(slug: string): Promise<AnimeInfo | null> {
   try {
-  const html = await fetchHtml(url);
-  const $ = cheerio.load(html);
+    const html = await fetchHtml(`${BASE}/anime/${slug}/`);
+    const $ = cheerio.load(html);
 
-  const getInfo = (label: string) => {
-    const p = $('.infozingle p').filter((_, el) => $(el).find('.infozingle-title').text().includes(label));
-    return p.find('span:last-child').text().trim();
-  };
+    const getInfo = (label: string) => {
+      const p = $('.infozingle p').filter((_, el) =>
+        $(el).find('.infozingle-title').text().includes(label)
+      );
+      return p.find('span:last-child').text().trim();
+    };
 
-  const episodes: AnimeInfo['episodes'] = [];
-  $('.episodelist ul li').each((_, el) => {
-    const a = $(el).find('a').first();
-    episodes.push({
-      title: a.text().trim(),
-      url: a.attr('href') || '',
-      date: $(el).find('.zeebr').text().trim() || $(el).find('i').text().trim(),
+    const episodes: AnimeInfo['episodes'] = [];
+    $('.episodelist ul li').each((_, el) => {
+      const a = $(el).find('a').first();
+      episodes.push({
+        title: a.text().trim(),
+        url: a.attr('href') || '',
+        slug: (a.attr('href') || '').split('/episode/')[1]?.replace(/\/$/, '') || '',
+        date: $(el).find('.zeebr').text().trim() || $(el).find('i').text().trim(),
+      });
     });
-  });
 
-  return {
-    title: $('.jdlrx').text().trim() || $('h1').text().trim(),
-    japanese: getInfo('Japanese'),
-    cover: $('.fotoanime img').attr('src') || '',
-    score: getInfo('Skor'),
-    producer: getInfo('Produser'),
-    type: getInfo('Tipe'),
-    status: getInfo('Status'),
-    totalEpisodes: getInfo('Total Episode'),
-    duration: getInfo('Durasi'),
-    releaseDate: getInfo('Tanggal Rilis'),
-    studio: getInfo('Studio'),
-    genres: $('.infozingle p')
-      .filter((_, el) => $(el).find('.infozingle-title').text().includes('Genre'))
-      .find('a')
-      .map((_, el) => ({ name: $(el).text().trim(), url: $(el).attr('href') || '' }))
-      .get(),
-    synopsis: $('.sinopc p').text().trim(),
-    episodes: episodes.reverse(),
-  };
+    return {
+      title: $('.jdlrx').text().trim() || $('h1').text().trim(),
+      japanese: getInfo('Japanese'),
+      cover: $('.fotoanime img').attr('src') || '',
+      score: getInfo('Skor'),
+      producer: getInfo('Produser'),
+      type: getInfo('Tipe'),
+      status: getInfo('Status'),
+      totalEpisodes: getInfo('Total Episode'),
+      duration: getInfo('Durasi'),
+      releaseDate: getInfo('Tanggal Rilis'),
+      studio: getInfo('Studio'),
+      genres: $('.infozingle p')
+        .filter((_, el) => $(el).find('.infozingle-title').text().includes('Genre'))
+        .find('a')
+        .map((_, el) => ({ name: $(el).text().trim(), url: $(el).attr('href') || '' }))
+        .get(),
+      synopsis: $('.sinopc p').text().trim(),
+      episodes: episodes.reverse(),
+    };
   } catch (err) {
-    console.error("getAnimeDetail:", err);
-    { return null; }
+    console.error('getAnimeDetail:', err);
+    return null;
   }
 }
 
-export async function getEpisode(url: string): Promise<EpisodeInfo | null> {
+/* ── episode stream ────────────────────────────────── */
+
+export async function getEpisodeStream(slug: string): Promise<EpisodeStream | null> {
   try {
-  const html = await fetchHtml(url);
-  const $ = cheerio.load(html);
+    const html = await fetchHtml(`${BASE}/episode/${slug}/`);
+    const $ = cheerio.load(html);
 
-  const downloads: EpisodeInfo['downloads'] = [];
-  $('.download h4').each((_, el) => {
-    const quality = $(el).text().trim();
-    const links: { label: string; url: string; size?: string }[] = [];
-    $(el).next('ul').find('li').each((_, li) => {
-      const a = $(li).find('a').first();
-      const size = $(li).text().match(/\(([\d.,]+\s*(MB|GB))\)/)?.[1];
-      links.push({ label: a.text().trim(), url: a.attr('href') || '', size });
+    const servers: { server: string; url: string }[] = [];
+    $('.mirrorstream iframe').each((_, el) => {
+      const iframe = $(el);
+      const src = iframe.attr('src') || '';
+      if (!src) return;
+      const label = iframe
+        .closest('.mirrorstream')
+        .prevAll('h4, h3')
+        .first()
+        .text()
+        .trim();
+      const serverName = label || `SERVER ${servers.length + 1}`;
+      servers.push({ server: serverName, url: src });
     });
-    if (links.length) downloads.push({ quality, links });
-  });
 
-  const episodes: EpisodeInfo['episodes'] = [];
-  $('.series ul li').each((_, el) => {
-    const a = $(el).find('a').first();
-    episodes.push({ title: a.text().trim(), url: a.attr('href') || '' });
-  });
+    if (servers.length === 0) {
+      $('.download h4').each((_, el) => {
+        const quality = $(el).text().trim();
+        const first = $(el).next('ul').find('li a').first();
+        const url = first.attr('href') || '';
+        if (url) servers.push({ server: `${quality} · ${first.text().trim()}`, url });
+      });
+    }
 
-  const animeUrl = $('.flir a[href*="/anime/"]').first().attr('href') || '';
-  const prevUrl = $('.flir .prev a').attr('href') || null;
-  const nextUrl = $('.flir .next a').attr('href') || null;
+    const allHref = $('.flir a[href*="/anime/"]').first().attr('href') || '';
+    const prevHref = $('.flir .prev a').attr('href') || '';
+    const nextHref = $('.flir .next a').attr('href') || '';
 
-  return {
-    title: $('h1').text().trim(),
-    animeUrl,
-    prevUrl,
-    nextUrl,
-    episodes: episodes.reverse(),
-    downloads,
-  };
+    return {
+      title: $('h1').text().trim(),
+      defaultStreamingUrl: servers[0]?.url || '',
+      servers,
+      navigation: {
+        prev: prevHref.split('/episode/')[1]?.replace(/\/$/, '') || null,
+        next: nextHref.split('/episode/')[1]?.replace(/\/$/, '') || null,
+        all: allHref.split('/anime/')[1]?.replace(/\/$/, '') || null,
+      },
+    };
   } catch (err) {
-    console.error("getEpisode:", err);
-    { return null; }
+    console.error('getEpisodeStream:', err);
+    return null;
   }
 }

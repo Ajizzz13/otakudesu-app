@@ -2,9 +2,7 @@ import Link from 'next/link';
 import type { AnimeItem } from '@/lib/types';
 
 export default function AnimeCard({ anime, eager }: { anime: AnimeItem; eager?: boolean }) {
-  const href = anime.url.includes('/episode/')
-    ? `/episode/${anime.url.split('/episode/')[1]?.replace(/\/$/, '')}`
-    : `/anime/${anime.slug}`;
+  const href = anime.slug ? `/anime/${anime.slug}` : anime.url;
 
   return (
     <Link

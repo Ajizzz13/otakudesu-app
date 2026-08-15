@@ -32,7 +32,7 @@ export default function SearchBox() {
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(value)}`);
         const data = await res.json();
-        setResults(data.items || []);
+        setResults(data?.data?.items || []);
         setStatus('done');
       } catch {
         setStatus('error');

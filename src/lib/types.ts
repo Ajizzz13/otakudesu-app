@@ -23,19 +23,23 @@ export interface AnimeInfo {
   studio: string;
   genres: { name: string; url: string }[];
   synopsis: string;
-  episodes: { title: string; url: string; date: string }[];
+  episodes: { title: string; url: string; slug: string; date: string }[];
 }
 
-export interface EpisodeInfo {
+export interface ServerStream {
+  server: string;
+  url: string;
+}
+
+export interface EpisodeStream {
   title: string;
-  animeUrl: string;
-  prevUrl: string | null;
-  nextUrl: string | null;
-  episodes: { title: string; url: string }[];
-  downloads: {
-    quality: string;
-    links: { label: string; url: string; size?: string }[];
-  }[];
+  defaultStreamingUrl: string;
+  servers: ServerStream[];
+  navigation: {
+    prev: string | null;
+    next: string | null;
+    all: string | null;
+  };
 }
 
 export interface ScheduleDay {
