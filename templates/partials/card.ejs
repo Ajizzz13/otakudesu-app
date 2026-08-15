@@ -1,0 +1,13 @@
+<a class="card" href="<%= a.slug ? '/anime/' + a.slug : a.url %>">
+  <div class="card-cover">
+    <% if (a.cover) { %>
+      <img src="<%= a.cover %>" alt="<%= a.title %>" loading="<%= eager ? 'eager' : 'lazy' %>" <%= eager ? 'fetchpriority="high"' : '' %>>
+    <% } else { %>
+      <span class="cover-none">NO COVER</span>
+    <% } %>
+    <% if (a.episode) { %><span class="card-badge"><%= a.episode %></span><% } %>
+  </div>
+  <h3 class="card-title"><%= a.title %></h3>
+  <% if (a.rating) { %><p class="card-meta"><%= a.rating %></p><% } %>
+  <% if (a.status) { %><p class="card-meta"><%= a.status %></p><% } %>
+</a>

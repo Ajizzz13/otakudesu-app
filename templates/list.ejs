@@ -1,0 +1,27 @@
+<%- include('partials/header') %>
+
+<div class="sec-head">
+  <span class="sec-tag">CH·00</span>
+  <h2 class="sec-title"><%= title.toUpperCase() %></h2>
+  <span class="sec-line"></span>
+</div>
+
+<% if (items.length === 0) { %>
+  <div class="no-signal"><span>NO SIGNAL</span><p>Feed sedang diperbarui.</p></div>
+<% } else { %>
+  <div class="grid">
+    <% items.forEach((a) => { %>
+      <%- include('partials/card', { a, eager: false }) %>
+    <% }) %>
+  </div>
+<% } %>
+
+<% if (totalPages > 1) { %>
+  <nav class="pagination" aria-label="Pagination">
+    <% if (page > 1) { %><a class="btn" href="?page=<%= page - 1 %>">&larr; Prev</a><% } %>
+    <span class="page-num"><%= page %> / <%= totalPages %></span>
+    <% if (page < totalPages) { %><a class="btn" href="?page=<%= page + 1 %>">Next &rarr;</a><% } %>
+  </nav>
+<% } %>
+
+<%- include('partials/footer') %>

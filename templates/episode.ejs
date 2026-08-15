@@ -1,0 +1,56 @@
+<%- include('partials/header') %>
+
+<div class="ep-head">
+  <h1 class="detail-title"><%= ep.title %></h1>
+  <nav class="ep-nav" aria-label="Episode navigation">
+    <% if (ep.navigation.prev) { %><a class="btn" href="/episode/<%= ep.navigation.prev %>">&larr; Prev</a>
+    <% } else { %><span class="btn disabled">Prev</span><% } %>
+    <% if (ep.navigation.all) { %><a class="btn" href="/anime/<%= ep.navigation.all %>">All Episodes</a><% } %>
+    <% if (ep.navigation.next) { %><a class="btn" href="/episode/<%= ep.navigation.next %>">Next &rarr;</a>
+    <% } else { %><span class="btn disabled">Next</span><% } %>
+  </nav>
+</div>
+
+<div class="player" data-player>
+  <div class="player-frame" data-frame>
+    <% if (ep.defaultStreamingUrl) { %>
+      <iframe src="<%= ep.defaultStreamingUrl %>" title="Stream" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+    <% } else { %>
+      <div class="player-empty"><span>LOST FEED</span></div>
+    <% } %>
+  </div>
+  <div class="player-loading" data-loading hidden>LOADING FEED…</div>
+  <% if (ep.mirrors.length) { %>
+    <div class="server-row" role="group" aria-label="Server">
+      <% ep.mirrors.forEach((m, i) => { %>
+        <button class="server-btn <%= i === 0 ? 'active' : '' %>" data-payload="<%= m.payload %>" aria-pressed="<%= i === 0 %>"><%= m.quality %> · <%= m.server %></button>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<% if (ep.downloads.length) { %>
+  <section class="mt-14">
+    <h2 class="sub-tag">DOWNLOAD</h2>
+    <div class="dl-list">
+      <% ep.downloads.forEach((d) => { %>
+        <div class="dl-row">
+          <span class="dl-quality"><%= d.quality %></span>
+          <span class="dl-links">
+            <% d.links.forEach((l) => { %>
+              <a class="dl-link" href="<%= l.url %>" target="_blank" rel="noopener nofollow"><%= l.server %></a>
+            <% }) %>
+          </span>
+        </div>
+      <% }) %>
+    </div>
+  </section>
+<% } %>
+
+<% if (episodes.length > 0) { %>
+  <aside class="mt-14">
+    <%- include('partials/episode-list', { episodes: episodes.map(e => ({ title: e.title, slug: e.slug, date: e.date })), activeSlug: activeSlug }) %>
+  </aside>
+<% } %>
+
+<%- include('partials/footer') %>

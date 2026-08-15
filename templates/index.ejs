@@ -1,0 +1,37 @@
+<%- include('partials/header') %>
+
+<section>
+  <div class="sec-head">
+    <span class="sec-tag">CH·01</span>
+    <h2 class="sec-title">ONGOING RELEASES</h2>
+    <span class="sec-line"></span>
+  </div>
+  <% if (ongoing.length === 0) { %>
+    <div class="no-signal"><span>NO SIGNAL</span><p>Feed sedang diperbarui.</p></div>
+  <% } else { %>
+    <div class="grid">
+      <% ongoing.forEach((a, i) => { %>
+        <%- include('partials/card', { a, eager: i < 8 }) %>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+
+<section class="mt-14">
+  <div class="sec-head">
+    <span class="sec-tag">CH·02</span>
+    <h2 class="sec-title">COMPLETE ANIME</h2>
+    <span class="sec-line"></span>
+  </div>
+  <% if (complete.length === 0) { %>
+    <div class="no-signal"><span>NO SIGNAL</span><p>Feed sedang diperbarui.</p></div>
+  <% } else { %>
+    <div class="grid">
+      <% complete.forEach((a) => { %>
+        <%- include('partials/card', { a, eager: false }) %>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,25 @@
+<%- include('partials/header') %>
+
+<div class="sec-head">
+  <span class="sec-tag">SEARCH</span>
+  <h2 class="sec-title">HASIL UNTUK “<%= q || '…' %>”</h2>
+  <span class="sec-line"></span>
+</div>
+
+<div class="search-inline">
+  <input type="search" id="search-page" placeholder="Search titles…" value="<%= q %>" aria-label="Search anime">
+</div>
+
+<% if (q.length < 2) { %>
+  <div class="no-signal"><span>MIN 2 CHARACTERS</span></div>
+<% } else if (items.length === 0) { %>
+  <div class="no-signal"><span>NO RESULT</span><p>Coba judul lain.</p></div>
+<% } else { %>
+  <div class="grid">
+    <% items.forEach((a, i) => { %>
+      <%- include('partials/card', { a, eager: i < 8 }) %>
+    <% }) %>
+  </div>
+<% } %>
+
+<%- include('partials/footer') %>

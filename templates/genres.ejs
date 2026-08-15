@@ -1,0 +1,15 @@
+<%- include('partials/header') %>
+
+<div class="sec-head">
+  <span class="sec-tag">CH·00</span>
+  <h2 class="sec-title">GENRE LIST</h2>
+  <span class="sec-line"></span>
+</div>
+
+<div class="genre-chips big">
+  <% genres.forEach((g) => { %>
+    <a class="chip" href="/genres/<%= g.slug %>"><%= g.name %></a>
+  <% }) %>
+</div>
+
+<%- include('partials/footer') %>

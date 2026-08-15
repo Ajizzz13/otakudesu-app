@@ -1,0 +1,25 @@
+<%- include('partials/header') %>
+
+<div class="sec-head">
+  <span class="sec-tag">CH·00</span>
+  <h2 class="sec-title">JADWAL RILIS</h2>
+  <span class="sec-line"></span>
+</div>
+
+<div class="schedule">
+  <% days.forEach((d) => { %>
+    <div class="sched-day">
+      <h3 class="sched-title"><%= d.day.toUpperCase() %></h3>
+      <ul class="sched-list">
+        <% d.items.forEach((it) => { %>
+          <li>
+            <% if (it.url) { %><a href="/anime/<%= it.url.split('/').filter(Boolean).pop() %>"><%= it.title %></a>
+            <% } else { %><span><%= it.title %></span><% } %>
+          </li>
+        <% }) %>
+      </ul>
+    </div>
+  <% }) %>
+</div>
+
+<%- include('partials/footer') %>
