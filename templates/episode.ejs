@@ -29,24 +29,6 @@
   <% } %>
 </div>
 
-<% if (ep.downloads.length) { %>
-  <section class="mt-14">
-    <h2 class="sub-tag">DOWNLOAD</h2>
-    <div class="dl-list">
-      <% ep.downloads.forEach((d) => { %>
-        <div class="dl-row">
-          <span class="dl-quality"><%= d.quality %></span>
-          <span class="dl-links">
-            <% d.links.forEach((l) => { %>
-              <a class="dl-link" href="<%= l.url %>" target="_blank" rel="noopener nofollow"><%= l.server %></a>
-            <% }) %>
-          </span>
-        </div>
-      <% }) %>
-    </div>
-  </section>
-<% } %>
-
 <% if (episodes.length > 0) { %>
   <aside class="mt-14">
     <%- include('partials/episode-list', { episodes: episodes.map(e => ({ title: e.title, slug: e.slug, date: e.date })), activeSlug: activeSlug }) %>
