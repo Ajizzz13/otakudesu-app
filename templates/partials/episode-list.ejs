@@ -1,18 +1,16 @@
 <div class="ep-filter">
-  <div class="ep-count">EPISODES <span class="dim"><%= episodes.length %></span></div>
+  <span class="ep-count">EPISODES · <span class="dim"><%= episodes.length %></span></span>
   <input type="search" class="ep-filter-input" placeholder="Filter episodes…" aria-label="Filter episodes">
 </div>
 <% if (episodes.length === 0) { %>
   <div class="no-signal"><span>NO EPISODE</span></div>
 <% } else { %>
-  <ol class="ep-list" data-episodes>
+  <div class="ep-grid" data-episodes>
     <% episodes.forEach((e) => { %>
-      <li>
-        <a href="/episode/<%= e.slug %>" class="ep-item <%= e.slug === activeSlug ? 'active' : '' %>" data-title="<%= e.title.toLowerCase() %>" data-slug="<%= e.slug.toLowerCase() %>">
-          <span class="ep-name"><%= e.title %></span>
-          <% if (e.date) { %><span class="ep-date"><%= e.date %></span><% } %>
-        </a>
-      </li>
+      <a href="/episode/<%= e.slug %>" class="ep-item <%= e.slug === activeSlug ? 'active' : '' %>" data-title="<%= e.title.toLowerCase() %>" data-slug="<%= e.slug.toLowerCase() %>">
+        <span class="ep-name"><%= e.title %></span>
+        <% if (e.date) { %><span class="ep-date"><%= e.date %></span><% } %>
+      </a>
     <% }) %>
-  </ol>
+  </div>
 <% } %>

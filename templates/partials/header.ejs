@@ -4,23 +4,26 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><%= title %> · OTAKUDESU CLEAN</title>
-  <meta name="description" content="Streaming anime tanpa iklan. Sumber data: otakudesu.blog.">
-  <link rel="stylesheet" href="/css/style.css?v=2">
+  <meta name="description" content="Streaming anime subtitle Indonesia tanpa iklan. Sumber data: otakudesu.blog.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css?v=4">
 </head>
 <body>
   <header class="site-header">
     <div class="wrap header-row">
-      <a href="/" class="brand">OTAKUDESU<span> CLEAN</span></a>
+      <a href="/" class="brand"><span class="brand-mark"></span>OTAKUDESU</a>
+      <nav class="site-nav" aria-label="Main">
+        <% const links = [['/','Home'],['/ongoing-anime/','On-Going'],['/complete-anime/','Complete'],['/anime-list/','Anime List'],['/jadwal-rilis/','Jadwal'],['/genre-list/','Genre']]; %>
+        <% links.forEach(([href,label]) => { %>
+          <a href="<%= href %>" class="<%= active === href ? 'active' : '' %>"><%= label %></a>
+        <% }) %>
+      </nav>
       <div class="search" id="search">
         <input type="search" id="search-input" placeholder="Search titles…" aria-label="Search anime" autocomplete="off">
         <div class="search-drop" id="search-drop" hidden></div>
       </div>
     </div>
-    <nav class="wrap site-nav" aria-label="Main">
-      <% const links = [['/','Home'],['/anime-list/','Anime List'],['/jadwal-rilis/','Jadwal Rilis'],['/ongoing-anime/','On-Going'],['/complete-anime/','Complete'],['/genre-list/','Genre List']]; %>
-      <% links.forEach(([href,label]) => { %>
-        <a href="<%= href %>" class="<%= active === href ? 'active' : '' %>"><%= label %></a>
-      <% }) %>
-    </nav>
   </header>
   <main class="wrap page">

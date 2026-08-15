@@ -1,9 +1,8 @@
 <%- include('partials/header') %>
 
-<div class="sec-head">
-  <span class="sec-tag">CH·00</span>
-  <h2 class="sec-title"><%= title.toUpperCase() %></h2>
-  <span class="sec-line"></span>
+<div class="rail-head">
+  <h1 class="rail-title"><%= title %></h1>
+  <% if (items.length) { %><span class="rail-count"><%= items.length %> TITLES</span><% } %>
 </div>
 
 <% if (items.length === 0) { %>
@@ -11,16 +10,16 @@
 <% } else { %>
   <div class="grid">
     <% items.forEach((a) => { %>
-      <%- include('partials/card', { a, eager: false }) %>
+      <%- include('partials/tile', { a, eager: false }) %>
     <% }) %>
   </div>
 <% } %>
 
 <% if (totalPages > 1) { %>
   <nav class="pagination" aria-label="Pagination">
-    <% if (page > 1) { %><a class="btn" href="?page=<%= page - 1 %>">&larr; Prev</a><% } %>
+    <% if (page > 1) { %><a class="btn btn-ghost" href="?page=<%= page - 1 %>">&larr; Prev</a><% } %>
     <span class="page-num"><%= page %> / <%= totalPages %></span>
-    <% if (page < totalPages) { %><a class="btn" href="?page=<%= page + 1 %>">Next &rarr;</a><% } %>
+    <% if (page < totalPages) { %><a class="btn btn-ghost" href="?page=<%= page + 1 %>">Next &rarr;</a><% } %>
   </nav>
 <% } %>
 

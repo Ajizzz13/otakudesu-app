@@ -1,0 +1,63 @@
+/* ============================================================
+   OTAKUDESU CLEAN — bespoke streaming design system
+   ============================================================ */
+:root {
+  /* color */
+  --color-ink: oklch(12.5% 0.012 250);
+  --color-panel: oklch(15.5% 0.014 250);
+  --color-panel-2: oklch(18.5% 0.016 250);
+  --color-line: oklch(22% 0.018 250);
+  --color-paper: oklch(93% 0.01 250);
+  --color-muted: oklch(71% 0.022 250);
+  --color-accent: oklch(63% 0.18 22);
+  --color-accent-ink: oklch(14% 0.04 22);
+  --color-focus: oklch(70% 0.19 285);
+  --color-overlay: oklch(12.5% 0.012 250);
+
+  /* font */
+  --font-display: "Archivo", system-ui, sans-serif;
+  --font-body: "Source Sans 3", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* space (4pt) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* type scale */
+  --text-hero: clamp(30px, 4.6vw, 52px);
+  --text-h2: clamp(20px, 2.6vw, 28px);
+  --text-h3: 17px;
+  --text-body: 15px;
+  --text-sm: 13px;
+  --text-xs: 11px;
+  --text-label: 10px;
+
+  /* motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-short: 150ms;
+  --dur-med: 260ms;
+  --dur-long: 480ms;
+
+  /* shape */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --rule: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-short: 0ms;
+    --dur-med: 0ms;
+    --dur-long: 0ms;
+  }
+}

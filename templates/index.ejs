@@ -1,34 +1,53 @@
 <%- include('partials/header') %>
 
-<section>
-  <div class="sec-head">
-    <span class="sec-tag">CH·01</span>
-    <h2 class="sec-title">ONGOING RELEASES</h2>
-    <span class="sec-line"></span>
+<% if (ongoing.length > 0) { %>
+  <section class="hero">
+    <% const hero = ongoing[0]; %>
+    <% if (hero.cover) { %><img class="hero-bg" src="<%= hero.cover %>" alt="" aria-hidden="true" fetchpriority="high"><% } %>
+    <div class="hero-shade" aria-hidden="true"></div>
+    <div class="hero-body">
+      <span class="hero-tag">NOW PLAYING</span>
+      <h1 class="hero-title"><%= hero.title %></h1>
+      <p class="hero-meta">
+        <% if (hero.episode) { %><span>EP <%- hero.episode %></span><% } %>
+        <% if (hero.rating) { %><span>★ <%- hero.rating %></span><% } %>
+        <span>ONGOING</span>
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="/anime/<%= hero.slug %>">▶ Watch</a>
+        <a class="btn btn-ghost" href="/anime/<%= hero.slug %>">Detail</a>
+      </div>
+    </div>
+  </section>
+<% } %>
+
+<section class="rail">
+  <div class="rail-head">
+    <h2 class="rail-title">On-Going</h2>
+    <span class="rail-count"><%= ongoing.length %> TITLES</span>
   </div>
   <% if (ongoing.length === 0) { %>
     <div class="no-signal"><span>NO SIGNAL</span><p>Feed sedang diperbarui.</p></div>
   <% } else { %>
-    <div class="grid">
+    <div class="rail-track" data-rail>
       <% ongoing.forEach((a, i) => { %>
-        <%- include('partials/card', { a, eager: i < 8 }) %>
+        <%- include('partials/tile', { a, eager: i < 6 }) %>
       <% }) %>
     </div>
   <% } %>
 </section>
 
-<section class="mt-14">
-  <div class="sec-head">
-    <span class="sec-tag">CH·02</span>
-    <h2 class="sec-title">COMPLETE ANIME</h2>
-    <span class="sec-line"></span>
+<section class="rail">
+  <div class="rail-head">
+    <h2 class="rail-title">Complete</h2>
+    <span class="rail-count"><%= complete.length %> TITLES</span>
   </div>
   <% if (complete.length === 0) { %>
     <div class="no-signal"><span>NO SIGNAL</span><p>Feed sedang diperbarui.</p></div>
   <% } else { %>
-    <div class="grid">
+    <div class="rail-track" data-rail>
       <% complete.forEach((a) => { %>
-        <%- include('partials/card', { a, eager: false }) %>
+        <%- include('partials/tile', { a, eager: false }) %>
       <% }) %>
     </div>
   <% } %>

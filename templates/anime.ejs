@@ -1,44 +1,53 @@
 <%- include('partials/header') %>
 
-<div class="detail">
-  <aside class="detail-side">
-    <% if (info.cover) { %>
-      <img src="<%= info.cover %>" alt="<%= info.title %>" class="detail-cover" fetchpriority="high">
-    <% } else { %>
-      <div class="detail-cover cover-none">NO COVER</div>
-    <% } %>
-    <% if (info.genres.length) { %>
-      <div class="genre-chips">
-        <% info.genres.forEach((g) => { %>
-          <a class="chip" href="/genres/<%= g.slug || '' %>"><%= g.name %></a>
-        <% }) %>
-      </div>
-    <% } %>
-  </aside>
-
-  <div class="detail-main">
-    <h1 class="detail-title"><%= info.title %></h1>
-    <dl class="detail-rows">
-      <% if (info.japanese) { %><div><dt>JAPANESE</dt><dd><%= info.japanese %></dd></div><% } %>
-      <% if (info.score) { %><div><dt>SKOR</dt><dd><%= info.score %></dd></div><% } %>
-      <% if (info.producer) { %><div><dt>PRODUSER</dt><dd><%= info.producer %></dd></div><% } %>
-      <% if (info.type) { %><div><dt>TIPE</dt><dd><%= info.type %></dd></div><% } %>
-      <% if (info.status) { %><div><dt>STATUS</dt><dd><%= info.status %></dd></div><% } %>
-      <% if (info.totalEpisodes) { %><div><dt>TOTAL EPISODE</dt><dd><%= info.totalEpisodes %></dd></div><% } %>
-      <% if (info.duration) { %><div><dt>DURASI</dt><dd><%= info.duration %></dd></div><% } %>
-      <% if (info.releaseDate) { %><div><dt>TANGGAL RILIS</dt><dd><%= info.releaseDate %></dd></div><% } %>
-      <% if (info.studio) { %><div><dt>STUDIO</dt><dd><%= info.studio %></dd></div><% } %>
-    </dl>
-    <% if (info.synopsis) { %>
-      <div class="synopsis">
-        <h2 class="sub-tag">SINOPSIS</h2>
-        <p><%= info.synopsis %></p>
-      </div>
-    <% } %>
+<div class="detail-hero">
+  <% if (info.cover) { %><img class="detail-hero-bg" src="<%= info.cover %>" alt="" aria-hidden="true"><% } %>
+  <div class="detail-hero-shade" aria-hidden="true"></div>
+  <div class="detail-hero-body">
+    <div>
+      <% if (info.cover) { %>
+        <img class="detail-cover" src="<%= info.cover %>" alt="<%= info.title %>" fetchpriority="high">
+      <% } else { %>
+        <div class="detail-cover cover-none">NO COVER</div>
+      <% } %>
+    </div>
+    <div>
+      <h1 class="detail-title"><%= info.title %></h1>
+      <p class="detail-tags">
+        <% if (info.type) { %><span><%= info.type %></span><% } %>
+        <% if (info.status) { %><span><%= info.status %></span><% } %>
+        <% if (info.score) { %><span>★ <%= info.score %></span><% } %>
+        <% if (info.totalEpisodes) { %><span><%= info.totalEpisodes %> EPS</span><% } %>
+        <% if (info.releaseDate) { %><span><%= info.releaseDate %></span><% } %>
+      </p>
+      <% if (info.synopsis) { %>
+        <div class="synopsis">
+          <h2 class="sub-tag">SINOPSIS</h2>
+          <p><%= info.synopsis %></p>
+        </div>
+      <% } %>
+      <dl class="detail-rows">
+        <% if (info.japanese) { %><div><dt>JAPANESE</dt><dd><%= info.japanese %></dd></div><% } %>
+        <% if (info.producer) { %><div><dt>PRODUSER</dt><dd><%= info.producer %></dd></div><% } %>
+        <% if (info.duration) { %><div><dt>DURASI</dt><dd><%= info.duration %></dd></div><% } %>
+        <% if (info.studio) { %><div><dt>STUDIO</dt><dd><%= info.studio %></dd></div><% } %>
+      </dl>
+      <% if (info.genres.length) { %>
+        <div class="genre-chips">
+          <% info.genres.forEach((g) => { %>
+            <a class="chip" href="/genres/<%= g.slug || '' %>"><%= g.name %></a>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
   </div>
 </div>
 
-<section class="mt-14">
+<section class="rail">
+  <div class="ep-head-row">
+    <h2 class="rail-title">Episodes</h2>
+    <span class="rail-count"><%= info.episodes.length %> EPS</span>
+  </div>
   <%- include('partials/episode-list', { episodes: info.episodes.map(e => ({ title: e.title, slug: e.slug, date: e.date })), activeSlug: null }) %>
 </section>
 

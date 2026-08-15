@@ -1,6 +1,27 @@
 (function () {
   'use strict';
 
+  /* ---------- rail drag scroll ---------- */
+  document.querySelectorAll('[data-rail]').forEach(function (track) {
+    var down = false, startX = 0, startLeft = 0, moved = false;
+    track.addEventListener('pointerdown', function (e) {
+      down = true; moved = false;
+      startX = e.clientX;
+      startLeft = track.scrollLeft;
+    });
+    track.addEventListener('pointermove', function (e) {
+      if (!down) return;
+      var dx = e.clientX - startX;
+      if (Math.abs(dx) > 4) moved = true;
+      track.scrollLeft = startLeft - dx;
+    });
+    track.addEventListener('pointerup', function () { down = false; });
+    track.addEventListener('pointerleave', function () { down = false; });
+    track.addEventListener('click', function (e) {
+      if (moved) { e.preventDefault(); e.stopPropagation(); }
+    });
+  });
+
   /* ---------- search box (header) ---------- */
   var input = document.getElementById('search-input');
   var drop = document.getElementById('search-drop');

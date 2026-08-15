@@ -1,15 +1,13 @@
 <%- include('partials/header') %>
 
-<div class="sec-head">
-  <span class="sec-tag">CH·00</span>
-  <h2 class="sec-title">JADWAL RILIS</h2>
-  <span class="sec-line"></span>
+<div class="rail-head">
+  <h1 class="rail-title">Jadwal Rilis</h1>
 </div>
 
 <div class="schedule">
   <% days.forEach((d) => { %>
     <div class="sched-day">
-      <h3 class="sched-title"><%= d.day.toUpperCase() %></h3>
+      <h2 class="sched-title"><%= d.day %></h2>
       <ul class="sched-list">
         <% d.items.forEach((it) => { %>
           <li>

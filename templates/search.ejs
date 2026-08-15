@@ -1,12 +1,11 @@
 <%- include('partials/header') %>
 
-<div class="sec-head">
-  <span class="sec-tag">SEARCH</span>
-  <h2 class="sec-title">HASIL UNTUK “<%= q || '…' %>”</h2>
-  <span class="sec-line"></span>
+<div class="rail-head">
+  <h1 class="rail-title">Search</h1>
+  <span class="rail-count"><%= q ? '“' + q + '”' : '' %></span>
 </div>
 
-<div class="search-inline">
+<div class="search-inline" style="max-width:420px;margin-bottom:28px">
   <input type="search" id="search-page" placeholder="Search titles…" value="<%= q %>" aria-label="Search anime">
 </div>
 
@@ -17,7 +16,7 @@
 <% } else { %>
   <div class="grid">
     <% items.forEach((a, i) => { %>
-      <%- include('partials/card', { a, eager: i < 8 }) %>
+      <%- include('partials/tile', { a, eager: i < 8 }) %>
     <% }) %>
   </div>
 <% } %>
