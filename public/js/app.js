@@ -54,6 +54,12 @@
     document.addEventListener('click', function (e) {
       if (!input.contains(e.target) && !drop.contains(e.target)) drop.hidden = true;
     });
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        var q = input.value.trim();
+        if (q.length >= 2) window.location.href = '/search?q=' + encodeURIComponent(q);
+      }
+    });
   }
 
   /* ---------- episode page filter ---------- */
