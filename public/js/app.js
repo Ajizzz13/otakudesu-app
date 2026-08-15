@@ -27,6 +27,26 @@
   var drop = document.getElementById('search-drop');
   if (input && drop) {
     var timer = null;
+    var idx = -1;
+    var items = [];
+
+    function renderDropdown(list) {
+      items = list;
+      idx = -1;
+      drop.innerHTML = list.length
+        ? list.map(function (it, i) {
+            return '<a class="search-item" data-i="' + i + '" href="/anime/' + it.slug + '">' +
+              (it.cover ? '<img src="' + it.cover + '" alt="">' : '') +
+              '<span>' + it.title + '</span></a>';
+          }).join('')
+        : '<div class="search-empty">NO RESULT</div>';
+    }
+
+    function select(i) {
+      var el = drop.querySelector('[data-i="' + i + '"]');
+      if (el) window.location.href = el.getAttribute('href');
+    }
+
     input.addEventListener('input', function () {
       clearTimeout(timer);
       var q = input.value.trim();
@@ -37,28 +57,31 @@
         fetch('/api/search?q=' + encodeURIComponent(q))
           .then(function (r) { return r.json(); })
           .then(function (data) {
-            var items = (data && data.data && data.data.items) || [];
-            if (!items.length) {
-              drop.innerHTML = '<div class="search-empty">NO RESULT</div>';
-              return;
-            }
-            drop.innerHTML = items.map(function (it) {
-              return '<a class="search-item" href="/anime/' + it.slug + '">' +
-                (it.cover ? '<img src="' + it.cover + '" alt="">' : '') +
-                '<span>' + it.title + '</span></a>';
-            }).join('');
+            renderDropdown((data && data.data && data.data.items) || []);
           })
           .catch(function () { drop.innerHTML = '<div class="search-empty">ERROR</div>'; });
       }, 300);
     });
-    document.addEventListener('click', function (e) {
-      if (!input.contains(e.target) && !drop.contains(e.target)) drop.hidden = true;
-    });
+
     input.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') {
         var q = input.value.trim();
-        if (q.length >= 2) window.location.href = '/search?q=' + encodeURIComponent(q);
+        if (idx > -1) select(idx);
+        else if (q.length >= 2) window.location.href = '/search?q=' + encodeURIComponent(q);
+      } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        if (drop.hidden || !items.length) return;
+        e.preventDefault();
+        idx = e.key === 'ArrowDown' ? (idx + 1) % items.length : (idx - 1 + items.length) % items.length;
+        drop.querySelectorAll('.search-item').forEach(function (el, i) {
+          el.style.background = i === idx ? 'var(--color-panel-2)' : '';
+        });
+      } else if (e.key === 'Escape') {
+        drop.hidden = true;
       }
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!input.contains(e.target) && !drop.contains(e.target)) drop.hidden = true;
     });
   }
 

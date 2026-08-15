@@ -8,8 +8,9 @@
   --color-panel-2: oklch(18.5% 0.016 250);
   --color-line: oklch(22% 0.018 250);
   --color-paper: oklch(93% 0.01 250);
-  --color-muted: oklch(71% 0.022 250);
+  --color-muted: oklch(74% 0.022 250);
   --color-accent: oklch(63% 0.18 22);
+  --color-accent-text: oklch(73% 0.15 22);
   --color-accent-ink: oklch(14% 0.04 22);
   --color-focus: oklch(70% 0.19 285);
   --color-overlay: oklch(12.5% 0.012 250);
