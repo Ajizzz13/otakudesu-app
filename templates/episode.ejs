@@ -1,5 +1,9 @@
 <%- include('partials/header') %>
 
+<% if (ep.streams.length) { %>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/artplayer@5/dist/artplayer.css">
+<% } %>
+
 <div class="player-shell">
   <div>
     <div class="player-head">
@@ -13,9 +17,12 @@
       </nav>
     </div>
 
-    <div class="player" data-player>
+    <div class="player" data-player data-default="<%= ep.defaultStreamingUrl %>">
       <div class="player-frame" data-frame>
-        <% if (ep.defaultStreamingUrl) { %>
+        <% if (ep.streams.length) { %>
+          <div id="art-wrap"></div>
+          <script>window.__streams = <%- JSON.stringify(ep.streams) %>;</script>
+        <% } else if (ep.defaultStreamingUrl) { %>
           <iframe src="<%= ep.defaultStreamingUrl %>" title="Stream" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
         <% } else { %>
           <div class="player-empty"><span>LOST FEED</span></div>
@@ -24,10 +31,17 @@
       <div class="player-loading" data-loading hidden>LOADING FEED…</div>
     </div>
 
+    <% if (ep.streams.length && ep.mirrors.length) { %>
+      <p class="quota" style="margin-top:0">
+        <span class="quota-label">DEFAULT STREAM</span>
+        <span class="quota-list"><span>blogger · direct · kualitas di player</span></span>
+      </p>
+    <% } %>
+
     <% if (ep.mirrors.length) { %>
       <div class="server-row" role="group" aria-label="Server">
         <% ep.mirrors.forEach((m, i) => { %>
-          <button class="server-btn <%= i === 0 ? 'active' : '' %>" data-payload="<%= m.payload %>" aria-pressed="<%= i === 0 %>"><%= m.quality %> · <%= m.server %></button>
+          <button class="server-btn <%= !ep.streams.length && i === 0 ? 'active' : '' %>" data-payload="<%= m.payload %>" aria-pressed="<%= !ep.streams.length && i === 0 %>"><%= m.quality %> · <%= m.server %></button>
         <% }) %>
       </div>
     <% } %>
@@ -50,5 +64,9 @@
     </aside>
   <% } %>
 </div>
+
+<% if (ep.streams.length) { %>
+  <script src="https://cdn.jsdelivr.net/npm/artplayer@5/dist/artplayer.min.js"></script>
+<% } %>
 
 <%- include('partials/footer') %>

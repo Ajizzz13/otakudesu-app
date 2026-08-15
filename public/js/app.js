@@ -102,10 +102,66 @@
   if (player) {
     var frame = player.querySelector('[data-frame]');
     var loading = player.querySelector('[data-loading]');
-    var iframe = frame ? frame.querySelector('iframe') : null;
-    var current = iframe ? iframe.src : '';
+    var current = '';
+
+    function destroyArt() {
+      if (window.__art) {
+        try { window.__art.destroy(); } catch (e) {}
+        window.__art = null;
+      }
+    }
+
+    function initArt() {
+      if (!window.Artplayer || !window.__streams || !window.__streams.length) {
+        fallbackIframe(player.getAttribute('data-default') || '');
+        return;
+      }
+      var streams = window.__streams;
+      var pick = streams.filter(function (s) { return s.quality === '720p'; })[0]
+        || streams[streams.length - 1]
+        || streams[0];
+      window.__art = new Artplayer({
+        container: '#art-wrap',
+        url: pick.url,
+        quality: streams.map(function (s) {
+          return { name: s.quality, html: s.quality, url: s.url };
+        }),
+        theme: '#b94a1e',
+        autoSize: false,
+        playbackRate: true,
+        screenshot: true,
+        setting: true,
+        fullscreen: true,
+        fullscreenWeb: true,
+        mini: true,
+        fastForward: true,
+        lock: true,
+        pip: true,
+        airplay: true,
+        lang: 'en',
+      });
+      window.__art.on('error', function () {
+        fallbackIframe(player.getAttribute('data-default') || '');
+      });
+    }
+
+    function fallbackIframe(url) {
+      destroyArt();
+      if (!url) return;
+      if (loading) loading.hidden = false;
+      var el = document.createElement('iframe');
+      el.src = url;
+      el.title = 'Stream';
+      el.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
+      el.setAttribute('allowfullscreen', '');
+      frame.innerHTML = '';
+      frame.appendChild(el);
+      if (loading) loading.hidden = true;
+      current = url;
+    }
 
     function setSrc(url) {
+      destroyArt();
       current = url;
       if (loading) loading.hidden = !url;
       if (frame && url) {
@@ -118,6 +174,8 @@
         frame.appendChild(el);
       }
     }
+
+    initArt();
 
     player.querySelectorAll('.server-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {

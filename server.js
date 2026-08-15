@@ -3,6 +3,7 @@ const express = require('express');
 const {
   getHome, getAnimeDetail, getEpisodeStream, searchAnime, resolveMirror,
   getOngoing, getComplete, getAnimeList, getSchedule, getGenres, getGenreAnime,
+  resolveBloggerStreams,
 } = require('./lib/scraper');
 
 const app = express();
@@ -94,6 +95,13 @@ app.post('/api/stream-resolve', express.json(), safe(async (req, res) => {
   if (!payload) return res.status(400).json({ success: false, error: 'payload required' });
   const src = await resolveMirror(payload);
   res.json({ success: true, data: { src } });
+}));
+
+app.post('/api/stream-direct', express.json(), safe(async (req, res) => {
+  const { url } = req.body || {};
+  if (!url) return res.status(400).json({ success: false, error: 'url required' });
+  const streams = await resolveBloggerStreams(url);
+  res.json({ success: true, data: { streams } });
 }));
 
 app.listen(PORT, () => console.log(`otakudesu-clean running on http://localhost:${PORT}`));
