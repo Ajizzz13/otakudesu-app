@@ -1,3 +1,5 @@
+/* Hallmark · macrostructure: Workbench · tone: technical · anchor hue: cool cyan
+ * theme: Cobalt (dark) · design-system: design.md · designed-as-app */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,6 +10,7 @@
   --color-panel-2: #1a1a22;
   --color-line: #22222a;
   --color-accent: #00dcff;
+  --color-accent-ink: #0a0a0c;
   --color-data: #00dcff;
   --color-paper: #f4f4f6;
   --color-muted: #808090;
@@ -17,8 +20,21 @@
   --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2rem;
+  --space-xl: 3rem;
+
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --dur-short: 220ms;
+}
+
+html,
+body {
+  overflow-x: clip;
 }
 
 body {
@@ -32,4 +48,13 @@ body {
   font-size: 0.75rem;
   letter-spacing: 0.1em;
   color: var(--color-data);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }

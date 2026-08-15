@@ -1,57 +1,100 @@
-import { getAnimeDetail } from '@/lib/scraper';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { getAnimeDetail } from '@/lib/scraper';
+import SectionHead from '@/components/SectionHead';
 
-type Props = {
-  params: Promise<{ slug: string }>;
-};
+export const revalidate = 600;
 
-export default async function AnimeDetail({ params }: Props) {
+export default async function AnimeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const anime = await getAnimeDetail(slug);
+  const url = `https://otakudesu.blog/anime/${slug}/`;
+  const info = await getAnimeDetail(url);
+  if (!info) notFound();
 
-  if (!anime) return <div className="p-10 text-center">Anime tidak ditemukan</div>;
+  const rows: [string, string][] = [
+    ['Japanese', info.japanese],
+    ['Skor', info.score],
+    ['Produser', info.producer],
+    ['Tipe', info.type],
+    ['Status', info.status],
+    ['Total Episode', info.totalEpisodes],
+    ['Durasi', info.duration],
+    ['Tanggal Rilis', info.releaseDate],
+    ['Studio', info.studio],
+  ];
 
   return (
-    <div className="min-h-screen bg-ink text-paper p-6 max-w-5xl mx-auto">
-      <header className="mb-8 flex items-center justify-between">
-        <Link href="/" className="text-sm font-mono text-muted hover:text-accent">&larr; BACK TO GUIDE</Link>
-        <span className="osd-label">CH·02 / DETAIL</span>
-      </header>
-
-      <div className="flex flex-col md:flex-row gap-8 mb-12">
-        <div className="w-full md:w-1/3">
-          <img src={anime.cover} alt={anime.title} className="w-full rounded-lg shadow-2xl border border-line" />
-        </div>
-        <div className="flex-1">
-          <h1 className="text-3xl font-display text-paper mb-2">{anime.title}</h1>
-          <div className="flex gap-4 mb-6 text-xs font-mono">
-            <span className="px-2 py-1 bg-panel border border-line text-accent">SKOR: {anime.score}</span>
-            <span className="px-2 py-1 bg-panel border border-line">{anime.status}</span>
+    <>
+      <div className="grid md:grid-cols-[240px_1fr] gap-8">
+        <div>
+          {info.cover ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={info.cover}
+              alt={info.title}
+              className="w-full aspect-[3/4] object-cover rounded-lg border border-line"
+              fetchPriority="high"
+            />
+          ) : (
+            <div className="w-full aspect-[3/4] rounded-lg border border-line flex items-center justify-center font-mono text-xs text-muted">
+              NO COVER
+            </div>
+          )}
+          <div className="flex flex-wrap gap-1.5 mt-4">
+            {info.genres.map((g) => (
+              <Link
+                key={g.url}
+                href={`/genres/${g.url.split('/genres/')[1]?.replace(/\/$/, '')}`}
+                className="px-2.5 py-1 text-xs bg-panel border border-line rounded hover:border-accent hover:text-accent transition-colors"
+              >
+                {g.name}
+              </Link>
+            ))}
           </div>
-          <p className="text-muted text-sm leading-relaxed mb-8">{anime.synopsis}</p>
+        </div>
+
+        <div>
+          <h1 className="font-display text-2xl text-paper leading-tight">{info.title}</h1>
+          <dl className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2.5">
+            {rows.map(
+              ([k, v]) =>
+                v && (
+                  <div key={k} className="flex gap-3 border-b border-line/40 pb-2">
+                    <dt className="font-mono text-xs text-muted shrink-0 w-28">{k.toUpperCase()}</dt>
+                    <dd className="text-sm text-paper">{v}</dd>
+                  </div>
+                )
+            )}
+          </dl>
+          <div className="mt-6">
+            <h2 className="font-mono text-xs text-accent tracking-[0.2em] mb-2">SINOPSIS</h2>
+            <p className="text-sm text-muted leading-relaxed">{info.synopsis}</p>
+          </div>
         </div>
       </div>
 
-      <section>
-        <div className="mb-6">
-          <span className="osd-label">EP·LIST</span>
-          <h2 className="text-xl font-display mt-1 text-paper">Daftar Episode</h2>
-          <div className="h-px w-full bg-gradient-to-r from-accent/50 to-transparent mt-2" />
-        </div>
-
-        <div className="grid gap-2">
-          {anime.episodes.map((ep: any, idx: number) => (
-            <Link 
-              key={idx} 
-              href={`/episode/${ep.slug}`}
-              className="flex justify-between items-center p-3 bg-panel border border-line rounded hover:border-accent group transition-colors"
-            >
-              <span className="text-sm group-hover:text-accent">{ep.title}</span>
-              <span className="text-[10px] font-mono text-muted">{ep.date}</span>
-            </Link>
-          ))}
-        </div>
+      <section className="mt-14">
+        <SectionHead tag="EPISODES" title={`DAFTAR EPISODE (${info.episodes.length})`} />
+        {info.episodes.length === 0 ? (
+          <div className="border border-dashed border-line rounded p-12 text-center font-mono text-sm text-accent">
+            NO EPISODE YET
+          </div>
+        ) : (
+          <ol className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {info.episodes.map((ep) => (
+              <li key={ep.url}>
+                <a
+                  href={`/episode/${ep.url.split('/episode/')[1]?.replace(/\/$/, '')}`}
+                  className="flex items-center justify-between gap-3 px-3.5 py-2.5 bg-panel border border-line rounded hover:border-accent transition-colors"
+                >
+                  <span className="text-sm text-paper hover:text-accent transition-colors">{ep.title}</span>
+                  {ep.date && <span className="font-mono text-[10px] text-muted shrink-0">{ep.date}</span>}
+                </a>
+              </li>
+            ))}
+          </ol>
+        )}
       </section>
-    </div>
+    </>
   );
 }

@@ -1,12 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { searchAnime } from '@/lib/scraper';
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const q = searchParams.get('q');
+export const revalidate = 0;
 
-  if (!q) return NextResponse.json([]);
-  
-  const results = await searchAnime(q);
-  return NextResponse.json(results);
+export async function GET(req: NextRequest) {
+  const q = req.nextUrl.searchParams.get('q')?.trim();
+  if (!q || q.length < 2) return NextResponse.json({ items: [] });
+
+  try {
+    const items = await searchAnime(q);
+    return NextResponse.json({ items });
+  } catch (e: any) {
+    return NextResponse.json({ items: [], error: e?.message || 'Search failed.' }, { status: 502 });
+  }
 }
