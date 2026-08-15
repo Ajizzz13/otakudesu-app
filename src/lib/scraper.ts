@@ -52,20 +52,31 @@ function parseThumbList(html: string, $: cheerio.CheerioAPI): AnimeItem[] {
 }
 
 export async function getOngoing(page = 1): Promise<Paginated<AnimeItem>> {
+  try {
   const url = `${BASE}/ongoing-anime/${page > 1 ? `page/${page}/` : ''}`;
   const html = await fetchHtml(url);
   const $ = cheerio.load(html);
   return { items: parseThumbList(html, $), page, totalPages: parseLastPage($) };
+  } catch (err) {
+    console.error("getOngoing:", err);
+    { return { items: [], page, totalPages: 1 }; }
+  }
 }
 
 export async function getComplete(page = 1): Promise<Paginated<AnimeItem>> {
+  try {
   const url = `${BASE}/complete-anime/${page > 1 ? `page/${page}/` : ''}`;
   const html = await fetchHtml(url);
   const $ = cheerio.load(html);
   return { items: parseThumbList(html, $), page, totalPages: parseLastPage($) };
+  } catch (err) {
+    console.error("getComplete:", err);
+    { return { items: [], page, totalPages: 1 }; }
+  }
 }
 
 export async function getAnimeList(page = 1): Promise<Paginated<AnimeItem>> {
+  try {
   const url = `${BASE}/anime-list/${page > 1 ? `page/${page}/` : ''}`;
   const html = await fetchHtml(url);
   const $ = cheerio.load(html);
@@ -81,9 +92,14 @@ export async function getAnimeList(page = 1): Promise<Paginated<AnimeItem>> {
     });
   });
   return { items, page, totalPages: parseLastPage($) };
+  } catch (err) {
+    console.error("getAnimeList:", err);
+    { return { items: [], page, totalPages: 1 }; }
+  }
 }
 
 export async function getSchedule(): Promise<ScheduleDay[]> {
+  try {
   const html = await fetchHtml(`${BASE}/jadwal-rilis/`);
   const $ = cheerio.load(html);
   const days: ScheduleDay[] = [];
@@ -97,9 +113,14 @@ export async function getSchedule(): Promise<ScheduleDay[]> {
     if (day) days.push({ day, items });
   });
   return days;
+  } catch (err) {
+    console.error("getSchedule:", err);
+    { return []; }
+  }
 }
 
-export async function getGenres(): Promise<{ name: string; url: string }[]> {
+export async function getGenres(): Promise<{
+  try { name: string; url: string }[]> {
   const html = await fetchHtml(`${BASE}/genre-list/`);
   const $ = cheerio.load(html);
   const genres: { name: string; url: string }[] = [];
@@ -108,16 +129,26 @@ export async function getGenres(): Promise<{ name: string; url: string }[]> {
     genres.push({ name: a.text().trim(), url: a.attr('href') || '' });
   });
   return genres;
+  } catch (err) {
+    console.error("getGenres:", err);
+    { return []; }
+  }
 }
 
 export async function getGenreAnime(slug: string, page = 1): Promise<Paginated<AnimeItem>> {
+  try {
   const url = `${BASE}/genres/${slug}/${page > 1 ? `page/${page}/` : ''}`;
   const html = await fetchHtml(url);
   const $ = cheerio.load(html);
   return { items: parseThumbList(html, $), page, totalPages: parseLastPage($) };
+  } catch (err) {
+    console.error("getGenreAnime:", err);
+    { return { items: [], page, totalPages: 1 }; }
+  }
 }
 
 export async function searchAnime(query: string): Promise<AnimeItem[]> {
+  try {
   const url = `${BASE}/?s=${encodeURIComponent(query)}&post_type=anime`;
   const html = await fetchHtml(url);
   const $ = cheerio.load(html);
@@ -136,9 +167,14 @@ export async function searchAnime(query: string): Promise<AnimeItem[]> {
     });
   });
   return items;
+  } catch (err) {
+    console.error("searchAnime:", err);
+    { return []; }
+  }
 }
 
 export async function getAnimeDetail(url: string): Promise<AnimeInfo | null> {
+  try {
   const html = await fetchHtml(url);
   const $ = cheerio.load(html);
 
@@ -177,9 +213,14 @@ export async function getAnimeDetail(url: string): Promise<AnimeInfo | null> {
     synopsis: $('.sinopc p').text().trim(),
     episodes: episodes.reverse(),
   };
+  } catch (err) {
+    console.error("getAnimeDetail:", err);
+    { return null; }
+  }
 }
 
 export async function getEpisode(url: string): Promise<EpisodeInfo | null> {
+  try {
   const html = await fetchHtml(url);
   const $ = cheerio.load(html);
 
@@ -213,4 +254,8 @@ export async function getEpisode(url: string): Promise<EpisodeInfo | null> {
     episodes: episodes.reverse(),
     downloads,
   };
+  } catch (err) {
+    console.error("getEpisode:", err);
+    { return null; }
+  }
 }
