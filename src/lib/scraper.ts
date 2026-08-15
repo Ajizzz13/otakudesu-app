@@ -157,8 +157,8 @@ export async function getSchedule(): Promise<ScheduleDay[]> {
   }
 }
 
-export async function getGenres(): Promise<{
-  try { name: string; url: string }[]> {
+export async function getGenres(): Promise<{ name: string; url: string }[]> {
+  try {
   const html = await fetchHtml(`${BASE}/genre-list/`);
   const $ = cheerio.load(html);
   const genres: { name: string; url: string }[] = [];
