@@ -20,14 +20,15 @@
     <% } %>
   </div>
   <div class="player-loading" data-loading hidden>LOADING FEED…</div>
-  <% if (ep.mirrors.length) { %>
-    <div class="server-row" role="group" aria-label="Server">
-      <% ep.mirrors.forEach((m, i) => { %>
-        <button class="server-btn <%= i === 0 ? 'active' : '' %>" data-payload="<%= m.payload %>" aria-pressed="<%= i === 0 %>"><%= m.quality %> · <%= m.server %></button>
-      <% }) %>
-    </div>
-  <% } %>
 </div>
+
+<% if (ep.mirrors.length) { %>
+  <div class="server-row" role="group" aria-label="Server">
+    <% ep.mirrors.forEach((m, i) => { %>
+      <button class="server-btn <%= i === 0 ? 'active' : '' %>" data-payload="<%= m.payload %>" aria-pressed="<%= i === 0 %>"><%= m.quality %> · <%= m.server %></button>
+    <% }) %>
+  </div>
+<% } %>
 
 <% if (episodes.length > 0) { %>
   <aside class="mt-14">
