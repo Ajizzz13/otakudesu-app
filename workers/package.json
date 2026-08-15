@@ -1,0 +1,17 @@
+{
+  "name": "otakudesu-app-workers",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.js",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "ejs": "^3.1.10"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
