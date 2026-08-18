@@ -86,9 +86,15 @@ const KEYMAP = {
 function explicitLocals(tpl, keys) {
   return tpl.replace(/(<%[-=]?)([\s\S]*?)(%>)/g, (m, open, code, close) => {
     let out = code;
+    const strings = [];
+    out = out.replace(/'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"/g, (s) => {
+      strings.push(s);
+      return '\uE000' + (strings.length - 1) + '\uE001';
+    });
     for (const k of keys) {
       out = out.replace(new RegExp('(?<![.\\w])' + k + '\\b(?!\\s*:)', 'g'), 'locals.' + k);
     }
+    out = out.replace(/\uE000(\d+)\uE001/g, (_, i) => strings[Number(i)]);
     return open + out + close;
   });
 }
