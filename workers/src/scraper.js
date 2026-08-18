@@ -253,6 +253,56 @@ async function getNonce() {
   return nonce;
 }
 
+function extractMedia(html) {
+  const cleaned = html
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&')
+    .replace(/&#039;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+  const patterns = [
+    /"url"\s*:\s*"((?:https?:)?\\?\/\\?\/[^"]+?\.mp4[^"]*)"/,
+    /"url"\s*:\s*"((?:https?:)?\\?\/\\?\/[^"]+?\.m3u8[^"]*)"/,
+    /"file"\s*:\s*"([^"]+\.mp4[^"]*)"/,
+    /"file"\s*:\s*"([^"]+\.m3u8[^"]*)"/,
+    /file\s*:\s*'([^']+\.mp4[^']*)'/,
+    /<video[^>]+src="([^"]+\.mp4[^"]*)"/,
+    /<source[^>]+src="([^"]+\.mp4[^"]*)"/,
+    /<video[^>]+src="([^"]+\.m3u8[^"]*)"/,
+    /<source[^>]+src="([^"]+\.m3u8[^"]*)"/,
+  ];
+  for (const p of patterns) {
+    const m = cleaned.match(p);
+    if (m) {
+      let u = m[1]
+        .replace(/\\\//g, '/')
+        .replace(/\\u0026/g, '&')
+        .replace(/\\u003d/g, '=')
+        .replace(/\\&/g, '&');
+      if (u.startsWith('//')) u = 'https:' + u;
+      if (/^https?:\/\//.test(u)) return u;
+    }
+  }
+  return '';
+}
+
+async function deepResolveMirror(payload) {
+  const src = (await resolveMirror(payload)).replace(/&amp;/g, '&');
+  let media = '';
+  try {
+    const res = await fetch(src, {
+      headers: {
+        'User-Agent': UAS[0],
+        'Accept': 'text/html,application/xhtml+xml,*/*;q=0.8',
+        'Referer': BASE + '/',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+    });
+    media = extractMedia(await res.text());
+  } catch { media = ''; }
+  return { src, media };
+}
+
 async function resolveMirror(payload) {
   let parsed;
   try { parsed = JSON.parse(atob(payload)); }
@@ -323,9 +373,10 @@ async function getComplete(page = 1) {
 async function getAnimeList(page = 1) {
   const $ = await load(`${BASE}/anime-list/`);
   const items = [];
-  $('.daftarkartun a[href*="/anime/"]').each((_, a) => {
-    const url = $(a).attr('href') || '';
-    const title = $(a).text().trim();
+  $('.hodebgst').each((_, a) => {
+    const $a = $(a);
+    const url = $a.attr('href') || '';
+    const title = $a.text().replace(/\s+/g, ' ').trim();
     if (!url || !title) return;
     items.push({ title, slug: slugOf(url), url });
   });
@@ -383,5 +434,5 @@ async function getGenreAnime(genre, page = 1) {
 export {
   BASE, getHome, getAnimeDetail, getEpisodeStream, searchAnime, resolveMirror,
   getOngoing, getComplete, getAnimeList, getSchedule, getGenres, getGenreAnime,
-  resolveBloggerStreams,
+  resolveBloggerStreams, deepResolveMirror,
 };

@@ -6,7 +6,7 @@ const templates = tpls.templates;
 import {
   getHome, getAnimeDetail, getEpisodeStream, searchAnime, resolveMirror,
   getOngoing, getComplete, getAnimeList, getSchedule, getGenres, getGenreAnime,
-  resolveBloggerStreams,
+  resolveBloggerStreams, deepResolveMirror,
 } from './scraper.js';
 
 const TYPES = {
@@ -73,11 +73,11 @@ const routes = [
     const { ongoing, complete } = await getHome();
     return renderPage('index', { ongoing, complete, title: 'Home', active: '/' });
   }) },
-  { pattern: /^\/anime\/([^/]+)$/, handler: safe(async (req, [slug]) => {
+  { pattern: /^\/anime\/([^/]+)\/?$/, handler: safe(async (req, [slug]) => {
     const info = await getAnimeDetail(slug);
     return renderPage('anime', { info, title: info.title, active: null });
   }) },
-  { pattern: /^\/episode\/([^/]+)$/, handler: safe(async (req, [slug]) => {
+  { pattern: /^\/episode\/([^/]+)\/?$/, handler: safe(async (req, [slug]) => {
     const ep = await getEpisodeStream(slug);
     let episodes = [];
     if (ep.navigation.all) {
@@ -89,35 +89,35 @@ const routes = [
     const groups = groupMirrors(ep.mirrors);
     return renderPage('episode', { ep, episodes, groups, title: ep.title, activeSlug: slug, active: null });
   }) },
-  { pattern: /^\/search$/, handler: safe(async (req) => {
+  { pattern: /^\/search\/?$/, handler: safe(async (req) => {
     const q = (new URL(req.url).searchParams.get('q') || '').trim();
     const items = q.length >= 2 ? await searchAnime(q) : [];
     return renderPage('search', { q, items, title: 'Search', active: null });
   }) },
-  { pattern: /^\/ongoing-anime(?:\/(\d+))?$/, handler: safe(async (req, [, p]) => {
+  { pattern: /^\/ongoing-anime(?:\/(\d+))?\/?$/, handler: safe(async (req, [, p]) => {
     const page = Math.max(1, parseInt(p, 10) || 1);
     const data = await getOngoing(page);
     return renderPage('list', { ...data, title: 'Ongoing Anime', kind: 'ongoing', active: '/ongoing-anime/' });
   }) },
-  { pattern: /^\/complete-anime(?:\/(\d+))?$/, handler: safe(async (req, [, p]) => {
+  { pattern: /^\/complete-anime(?:\/(\d+))?\/?$/, handler: safe(async (req, [, p]) => {
     const page = Math.max(1, parseInt(p, 10) || 1);
     const data = await getComplete(page);
     return renderPage('list', { ...data, title: 'Complete Anime', kind: 'complete', active: '/complete-anime/' });
   }) },
-  { pattern: /^\/anime-list(?:\/(\d+))?$/, handler: safe(async (req, [, p]) => {
+  { pattern: /^\/anime-list(?:\/(\d+))?\/?$/, handler: safe(async (req, [, p]) => {
     const page = Math.max(1, parseInt(p, 10) || 1);
     const data = await getAnimeList(page);
     return renderPage('alist', { ...data, title: 'Anime List', active: '/anime-list/' });
   }) },
-  { pattern: /^\/jadwal-rilis$/, handler: safe(async () => {
+  { pattern: /^\/jadwal-rilis\/?$/, handler: safe(async () => {
     const days = await getSchedule();
     return renderPage('schedule', { days, title: 'Jadwal Rilis', active: '/jadwal-rilis/' });
   }) },
-  { pattern: /^\/genre-list$/, handler: safe(async () => {
+  { pattern: /^\/genre-list\/?$/, handler: safe(async () => {
     const genres = await getGenres();
     return renderPage('genres', { genres, title: 'Genre List', active: '/genre-list/' });
   }) },
-  { pattern: /^\/genres\/([^/]+)(?:\/(\d+))?$/, handler: safe(async (req, [genre, p]) => {
+  { pattern: /^\/genres\/([^/]+)(?:\/(\d+))?\/?$/, handler: safe(async (req, [genre, p]) => {
     const page = Math.max(1, parseInt(p, 10) || 1);
     const data = await getGenreAnime(genre, page);
     return renderPage('list', { ...data, title: `Genre: ${data.genre}`, kind: `genres/${data.genre}`, active: null });
@@ -141,6 +141,13 @@ const routes = [
     if (!url) return json(400, { success: false, error: 'url required' });
     const streams = await resolveBloggerStreams(url);
     return json(200, { success: true, data: { streams } });
+  }) },
+  { pattern: /^\/api\/stream-direct-mirror$/, method: 'POST', handler: safe(async (req) => {
+    const body = await req.json().catch(() => ({}));
+    const { payload } = body;
+    if (!payload) return json(400, { success: false, error: 'payload required' });
+    const { src, media } = await deepResolveMirror(payload);
+    return json(200, { success: true, data: { src, media } });
   }) },
   { pattern: /^\/css\/tokens\.css$/, handler: () => new Response(assets['css/tokens.css'], { headers: { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } }) },
   { pattern: /^\/css\/style\.css$/, handler: () => new Response(assets['css/style.css'], { headers: { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } }) },

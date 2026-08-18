@@ -177,24 +177,79 @@
 
     initArt();
 
+    function playMedia(url) {
+      destroyArt();
+      var wrap = document.getElementById('art-wrap');
+      if (!window.Artplayer || !wrap) {
+        setSrc(player.getAttribute('data-default') || '');
+        return;
+      }
+      window.__art = new Artplayer({
+        container: '#art-wrap',
+        url: url,
+        theme: '#b94a1e',
+        autoSize: false,
+        playbackRate: true,
+        screenshot: true,
+        setting: true,
+        fullscreen: true,
+        fullscreenWeb: true,
+        mini: true,
+        fastForward: true,
+        lock: true,
+        pip: true,
+        airplay: true,
+        lang: 'en',
+      });
+      window.__art.on('error', function () {
+        fallbackIframe(player.getAttribute('data-default') || '');
+      });
+      if (loading) loading.hidden = true;
+    }
+
     player.querySelectorAll('.server-select').forEach(function (sel) {
       sel.addEventListener('change', function () {
         var payload = sel.value;
         if (!payload) return;
         if (loading) loading.hidden = false;
-        fetch('/api/stream-resolve', {
+        fetch('/api/stream-direct-mirror', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ payload: payload }),
         })
           .then(function (r) { return r.json(); })
           .then(function (data) {
-            if (data && data.success && data.data && data.data.src) setSrc(data.data.src);
-            else if (loading) { loading.hidden = true; }
+            if (data && data.success && data.data && data.data.media) {
+              playMedia(data.data.media);
+            } else if (data && data.success && data.data && data.data.src) {
+              setSrc(data.data.src);
+            } else if (loading) { loading.hidden = true; }
           })
           .catch(function () { if (loading) loading.hidden = true; });
       });
     });
+
+    (function dataSaver() {
+      var conn = navigator.connection || {};
+      var slow = conn.saveData === true
+        || conn.effectiveType === '3g'
+        || conn.effectiveType === 'slow-2g'
+        || (conn.downlink != null && conn.downlink < 1.2);
+      if (!slow) return;
+      var pick = null;
+      player.querySelectorAll('.server-select').forEach(function (s) {
+        if (s.getAttribute('data-quality') === '360p' && !pick) pick = s;
+      });
+      if (!pick) return;
+      pick.value = pick.options[0] ? pick.options[0].value : pick.value;
+      pick.dispatchEvent(new Event('change'));
+      var note = document.createElement('p');
+      note.className = 'quota';
+      note.style.marginTop = '10px';
+      note.innerHTML = '<span class="quota-label" style="color:var(--color-accent-text)">DATA SAVER</span>' +
+        '<span class="quota-list"><span>360p otomatis · hemat ±60% kuota</span></span>';
+      player.parentElement.appendChild(note);
+    })();
   }
 
   /* ---------- search page inline box ---------- */
