@@ -76,27 +76,34 @@ jobs:
             slug="$(echo "$raw" | xargs)"
             [ -z "$slug" ] && continue
             echo "::group::resolve $slug"
+            CAND_FILE=candidates.json
             if [ -n "$MEDIA_IN" ]; then
-              printf '%s' "$(node -e "process.stdout.write(JSON.stringify({media:process.env.MEDIA_IN,src:process.env.REFERER_IN}))")" > resolve.json
-            elif ! node scripts/resolve-media.mjs "$slug" "$QUALITY" > resolve.json; then
-              echo "::warning::resolve gagal: $slug"
-              cat resolve.json || true
-              echo "::endgroup::"
-              continue
+              printf '%s' "$MEDIA_IN" > "$CAND_FILE"
+            else
+              printf '%s' "[]" > "$CAND_FILE"
+              if node scripts/resolve-media.mjs "$slug" "$QUALITY" > cand-one.json 2>/dev/null; then
+                node -e "const o=require('./cand-one.json');const arr=(o.tried||[]).filter(t=>t.media&&t.reachable).map(t=>({media:t.media,referer:t.src,server:t.server,quality:t.quality}));if(o.media)arr.unshift({media:o.media,referer:o.referer||o.src,server:o.server,quality:o.quality});require('fs').writeFileSync('candidates.json',JSON.stringify(arr))" || true
+              fi
             fi
-            media="$(node -e "process.stdout.write(require('./resolve.json').media||'')")"
-            src="$(node -e "process.stdout.write(require('./resolve.json').src||'')")"
-            echo "src=$src"
-            echo "media=$media"
+            count=$(node -e "try{const c=require('./'+process.env.CAND_FILE);process.stdout.write(String(c.length))}catch{process.stdout.write('0')}")
+            echo "candidates: $count"
             echo "::endgroup::"
-            if [ -z "$media" ]; then
-              echo "::warning::media kosong / tidak reachable: $slug"
-              continue
-            fi
             outfile="out/${slug}.${QUALITY}.mp4"
-            echo "::group::compress $slug"
-            scripts/compress.sh "$media" "$outfile" "$CRF" "$src"
-            echo "::endgroup::"
+            ok=0
+            for ci in $(seq 0 $((count-1))); do
+              export CI=$ci; media=$(node -e "process.stdout.write(require('./'+process.env.CAND_FILE)[Number(process.env.CI)].media||'')")
+              src=$(node -e "process.stdout.write(require('./'+process.env.CAND_FILE)[Number(process.env.CI)].referer||'')" )
+              echo "::group::compress $slug [try $ci] src=$src"
+              if scripts/compress.sh "$media" "$outfile" "$CRF" "$src"; then
+                ok=1; echo "::endgroup::"; break
+              fi
+              echo "::warning::candidate $ci gagal, coba berikutnya"
+              echo "::endgroup::"
+            done
+            if [ "$ok" != "1" ]; then
+              echo "::warning::semua kandidat gagal: $slug"
+              continue
+            fi
             size="$(stat -c%s "$outfile")"
             MANIFEST="$(node -e "
               const m=JSON.parse(process.argv[1]);

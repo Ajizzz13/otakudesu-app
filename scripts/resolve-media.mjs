@@ -5,6 +5,14 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const scraper = require('../lib/scraper.js');
 
+// Support direct JSON candidate list via MEDIA_JSON env (worker payload)
+if (process.env.MEDIA_JSON) {
+  try {
+    const arr = JSON.parse(process.env.MEDIA_JSON);
+    process.stdout.write(JSON.stringify(Array.isArray(arr) ? { candidates: arr } : arr));
+    process.exit(0);
+  } catch { /* fall through */ }
+}
 const slug = process.argv[2];
 const quality = process.argv[3] || '360p';
 

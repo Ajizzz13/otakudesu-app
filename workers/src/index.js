@@ -121,12 +121,35 @@ async function dispatchCompress(env, slug, quality, media, referer) {
   return { ok: false, error: 'gh dispatch ' + res.status + ': ' + text.slice(0, 200) };
 }
 
-async function resolveForCompress(slug, quality) {
+const COMPRESS_BLOCKED_HOSTS = [/acek-cdn\.com/i];
+
+function compressMediaBlocked(url) {
+  try { const h = new URL(url).hostname; return COMPRESS_BLOCKED_HOSTS.some((re) => re.test(h)); }
+  catch { return true; }
+}
+
+async function probeCompressMedia(url, referer) {
+  if (!url || compressMediaBlocked(url)) return false;
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+        'Referer': referer || '',
+        'Range': 'bytes=0-1',
+      },
+      redirect: 'follow',
+    });
+    return res.status === 200 || res.status === 206;
+  } catch { return false; }
+}
+
+async function resolveForCompressList(slug, quality) {
   const ep = await getEpisodeStream(slug);
   const all = ep.mirrors || [];
   const sameQ = all.filter((m) => m.quality === quality);
   const ordered = [...sameQ, ...all.filter((m) => m.quality !== quality)];
-  let best = null;
+  const list = [];
+  const seen = new Set();
   for (const mirror of ordered) {
     if (!mirror || !mirror.payload) continue;
     let resolved;
@@ -134,15 +157,22 @@ async function resolveForCompress(slug, quality) {
     catch { continue; }
     const src = resolved.src;
     const media = resolved.media;
-    if (!media) continue;
+    if (!media || seen.has(media)) continue;
+    seen.add(media);
+    const reachable = await probeCompressMedia(media, src);
+    if (!reachable) continue;
     const isMp4 = /\.mp4(\?|$)/i.test(media);
-    if (!best || (isMp4 && !/\.mp4(\?|$)/i.test(best.media))) {
-      best = { media, referer: src, server: mirror.server, quality: mirror.quality };
-    }
-    if (isMp4) break;
+    list.push({ media, referer: src, server: mirror.server, quality: mirror.quality, mp4: isMp4 });
   }
-  return best;
+  list.sort((a, b) => (b.mp4 - a.mp4) || (a.quality === quality ? -1 : 1));
+  return list;
 }
+
+async function resolveForCompress(slug, quality) {
+  const list = await resolveForCompressList(slug, quality);
+  return list[0] || null;
+}
+
 
 function groupMirrors(mirrors) {
   const groups = [];
@@ -267,9 +297,9 @@ const routes = [
     if (!slug) return json(400, { success: false, error: 'slug required' });
     const asset = await findCompressedAsset(env, slug, quality);
     if (asset) return json(200, { success: true, status: 'ready', url: asset.url, size: asset.size });
-    const resolved = await resolveForCompress(slug, quality);
-    if (!resolved || !resolved.media) return json(200, { success: true, status: 'unresolvable' });
-    const dispatched = await dispatchCompress(env, slug, quality, resolved.media, resolved.referer);
+    const list = await resolveForCompressList(slug, quality);
+    if (!list.length) return json(200, { success: true, status: 'unresolvable' });
+    const dispatched = await dispatchCompress(env, slug, quality, JSON.stringify(list), '');
     if (!dispatched.ok) return json(502, { success: false, error: dispatched.error });
     if (env.COMPRESS_KV) await env.COMPRESS_KV.put(`pending:${slug}:${quality}`, '1', { expirationTtl: 3600 });
     return json(200, { success: true, status: 'processing' });
