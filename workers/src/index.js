@@ -40,13 +40,108 @@ function renderPage(name, data) {
 }
 
 function safe(fn) {
-  return async (req, params) => {
+  return async (req, params, env) => {
     try {
-      return await fn(req, params);
+      return await fn(req, params, env);
     } catch (err) {
-      return html(502, String(templates.error({ message: err.message === 'cf_challenge' ? 'cf_challenge' : err.message }, escapeXML, () => {}, (e) => { throw e; })));
+      const isJson = /\/(?:api\/)?(?:ensure-compressed|compress-status)/.test(new URL(req.url).pathname);
+      if (isJson) return json(502, { success: false, error: err.message });
+      return html(502, String(templates.error({ message: err.message === 'cf_challenge' ? 'cf_challenge' : err.message }, escapeXML, () => {}, (e) => { throw e })));
     }
   };
+}
+
+const GH_REPO = 'Ajizzz13/otakudesu-app';
+const GH_API = 'https://api.github.com';
+
+function ghHeaders(token, extra = {}) {
+  const h = {
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28',
+    'User-Agent': 'otakudesu-worker',
+    ...extra,
+  };
+  if (token) h['Authorization'] = 'Bearer ' + token;
+  return h;
+}
+
+async function findCompressedAsset(env, slug, quality) {
+  const token = env.GH_TOKEN;
+  const cacheKey = `asset:${slug}:${quality}`;
+  if (env.COMPRESS_KV) {
+    const hit = await env.COMPRESS_KV.get(cacheKey);
+    if (hit) {
+      try { return JSON.parse(hit); } catch { /* ignore */ }
+    }
+  }
+  const assetName = `${slug}.${quality}.mp4`;
+  let page = 1;
+  let found = null;
+  while (page <= 3 && !found) {
+    const res = await fetch(`${GH_API}/repos/${GH_REPO}/releases?per_page=30&page=${page}`, {
+      headers: ghHeaders(token),
+    });
+    if (!res.ok) break;
+    const releases = await res.json();
+    if (!Array.isArray(releases) || !releases.length) break;
+    for (const rel of releases) {
+      const asset = (rel.assets || []).find((a) => a.name === assetName);
+      if (asset) {
+        found = { url: asset.browser_download_url, size: asset.size, release: rel.tag_name };
+        break;
+      }
+    }
+    if (releases.length < 30) break;
+    page += 1;
+  }
+  if (found && env.COMPRESS_KV) {
+    await env.COMPRESS_KV.put(cacheKey, JSON.stringify(found), { expirationTtl: 86400 * 7 });
+  }
+  return found;
+}
+
+async function dispatchCompress(env, slug, quality, media, referer) {
+  const token = env.GH_TOKEN;
+  if (!token) return { ok: false, error: 'GH_TOKEN not configured' };
+  const inputs = {
+    slugs: slug,
+    quality: quality || '360p',
+    crf: '30',
+    tag: 'compressed-' + slug + '-' + (quality || '360p'),
+    media: media || '',
+    referer: referer || '',
+  };
+  const res = await fetch(GH_API + '/repos/' + GH_REPO + '/actions/workflows/compress.yml/dispatches', {
+    method: 'POST',
+    headers: ghHeaders(token, { 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ ref: 'main', inputs }),
+  });
+  if (res.status === 204) return { ok: true };
+  const text = await res.text().catch(() => '');
+  return { ok: false, error: 'gh dispatch ' + res.status + ': ' + text.slice(0, 200) };
+}
+
+async function resolveForCompress(slug, quality) {
+  const ep = await getEpisodeStream(slug);
+  const all = ep.mirrors || [];
+  const sameQ = all.filter((m) => m.quality === quality);
+  const ordered = [...sameQ, ...all.filter((m) => m.quality !== quality)];
+  let best = null;
+  for (const mirror of ordered) {
+    if (!mirror || !mirror.payload) continue;
+    let resolved;
+    try { resolved = await deepResolveMirror(mirror.payload); }
+    catch { continue; }
+    const src = resolved.src;
+    const media = resolved.media;
+    if (!media) continue;
+    const isMp4 = /\.mp4(\?|$)/i.test(media);
+    if (!best || (isMp4 && !/\.mp4(\?|$)/i.test(best.media))) {
+      best = { media, referer: src, server: mirror.server, quality: mirror.quality };
+    }
+    if (isMp4) break;
+  }
+  return best;
 }
 
 function groupMirrors(mirrors) {
@@ -156,21 +251,44 @@ const routes = [
     }
     return json(200, { success: true, data: { src: (tried[0] && tried[0].src) || '', media: '', tried } });
   }) },
+  { pattern: /^\/api\/compress-status$/, method: 'GET', handler: safe(async (req, params, env) => {
+    const u = new URL(req.url);
+    const slug = (u.searchParams.get('slug') || '').trim();
+    const quality = (u.searchParams.get('quality') || '360p').trim();
+    if (!slug) return json(400, { success: false, error: 'slug required' });
+    const asset = await findCompressedAsset(env, slug, quality);
+    if (asset) return json(200, { success: true, status: 'ready', url: asset.url, size: asset.size });
+    return json(200, { success: true, status: 'processing' });
+  }) },
+  { pattern: /^\/api\/ensure-compressed$/, method: 'POST', handler: safe(async (req, params, env) => {
+    const body = await req.json().catch(() => ({}));
+    const slug = (body.slug || '').trim();
+    const quality = (body.quality || '360p').trim();
+    if (!slug) return json(400, { success: false, error: 'slug required' });
+    const asset = await findCompressedAsset(env, slug, quality);
+    if (asset) return json(200, { success: true, status: 'ready', url: asset.url, size: asset.size });
+    const resolved = await resolveForCompress(slug, quality);
+    if (!resolved || !resolved.media) return json(200, { success: true, status: 'unresolvable' });
+    const dispatched = await dispatchCompress(env, slug, quality, resolved.media, resolved.referer);
+    if (!dispatched.ok) return json(502, { success: false, error: dispatched.error });
+    if (env.COMPRESS_KV) await env.COMPRESS_KV.put(`pending:${slug}:${quality}`, '1', { expirationTtl: 3600 });
+    return json(200, { success: true, status: 'processing' });
+  }) },
   { pattern: /^\/css\/tokens\.css$/, handler: () => new Response(assets['css/tokens.css'], { headers: { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } }) },
   { pattern: /^\/css\/style\.css$/, handler: () => new Response(assets['css/style.css'], { headers: { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } }) },
   { pattern: /^\/js\/app\.js$/, handler: () => new Response(assets['js/app.js'], { headers: { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } }) },
 ];
 
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
     for (const route of routes) {
       if (route.method && route.method !== request.method) continue;
       const m = path.match(route.pattern);
       if (!m) continue;
-      return route.handler(request, m.slice(1));
+      return route.handler(request, m.slice(1), env);
     }
-    return html(404, String(templates.error({ message: 'not found' }, escapeXML, () => {}, (e) => { throw e; })));
+    return html(404, String(templates.error({ message: 'not found' }, escapeXML, () => {}, (e) => { throw e })));
   },
 };

@@ -26,6 +26,16 @@ on:
         required: false
         default: ''
         type: string
+      media:
+        description: 'Direct media URL (diisi worker; kosongkan untuk resolve via scraper)'
+        required: false
+        default: ''
+        type: string
+      referer:
+        description: 'Referer/embed URL untuk media (diisi worker)'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write
@@ -54,6 +64,8 @@ jobs:
           SLUGS: ${{ inputs.slugs }}
           QUALITY: ${{ inputs.quality }}
           CRF: ${{ inputs.crf }}
+          MEDIA_IN: ${{ inputs.media }}
+          REFERER_IN: ${{ inputs.referer }}
         run: |
           set -euo pipefail
           mkdir -p out
@@ -64,7 +76,9 @@ jobs:
             slug="$(echo "$raw" | xargs)"
             [ -z "$slug" ] && continue
             echo "::group::resolve $slug"
-            if ! node scripts/resolve-media.mjs "$slug" "$QUALITY" > resolve.json; then
+            if [ -n "$MEDIA_IN" ]; then
+              printf '%s' "$(node -e "process.stdout.write(JSON.stringify({media:process.env.MEDIA_IN,src:process.env.REFERER_IN}))")" > resolve.json
+            elif ! node scripts/resolve-media.mjs "$slug" "$QUALITY" > resolve.json; then
               echo "::warning::resolve gagal: $slug"
               cat resolve.json || true
               echo "::endgroup::"
