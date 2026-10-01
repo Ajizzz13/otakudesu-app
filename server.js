@@ -134,4 +134,74 @@ app.post('/api/stream-direct-mirror', express.json(), safe(async (req, res) => {
   res.json({ success: true, data: { src: (tried[0] && tried[0].src) || '', media: '', tried } });
 }));
 
+const GH_REPO = process.env.GH_REPO || 'Ajizzz13/otakudesu-app';
+const GH_TOKEN = process.env.GH_TOKEN || '';
+const assetCache = new Map();
+
+function ghHeaders(extra = {}) {
+  const h = {
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28',
+    'User-Agent': 'otakudesu-local',
+    ...extra,
+  };
+  if (GH_TOKEN) h['Authorization'] = 'Bearer ' + GH_TOKEN;
+  return h;
+}
+
+async function findCompressedAsset(slug, quality) {
+  const cacheKey = `${slug}:${quality}`;
+  const hit = assetCache.get(cacheKey);
+  if (hit && hit.exp > Date.now()) return hit.value;
+  const assetName = `${slug}.${quality}.mp4`;
+  let page = 1;
+  let found = null;
+  while (page <= 3 && !found) {
+    const res = await fetch(`https://api.github.com/repos/${GH_REPO}/releases?per_page=30&page=${page}`, { headers: ghHeaders() });
+    if (!res.ok) break;
+    const releases = await res.json();
+    if (!Array.isArray(releases) || !releases.length) break;
+    for (const rel of releases) {
+      const asset = (rel.assets || []).find((a) => a.name === assetName);
+      if (asset) { found = { url: asset.browser_download_url, size: asset.size, release: rel.tag_name }; break; }
+    }
+    if (releases.length < 30) break;
+    page += 1;
+  }
+  if (found) assetCache.set(cacheKey, { value: found, exp: Date.now() + 86400000 });
+  return found;
+}
+
+async function dispatchCompress(slug, quality) {
+  if (!GH_TOKEN) return { ok: false, error: 'GH_TOKEN not set (export GH_TOKEN=... before running)' };
+  const res = await fetch(`https://api.github.com/repos/${GH_REPO}/actions/workflows/compress.yml/dispatches`, {
+    method: 'POST',
+    headers: ghHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ ref: 'main', inputs: { slugs: slug, quality: quality || '360p', crf: '30', tag: `compressed-${slug}-${quality || '360p'}` } }),
+  });
+  if (res.status === 204) return { ok: true };
+  const text = await res.text().catch(() => '');
+  return { ok: false, error: `gh dispatch ${res.status}: ${text.slice(0, 200)}` };
+}
+
+app.get('/api/compress-status', safe(async (req, res) => {
+  const slug = String(req.query.slug || '').trim();
+  const quality = String(req.query.quality || '360p').trim();
+  if (!slug) return res.status(400).json({ success: false, error: 'slug required' });
+  const asset = await findCompressedAsset(slug, quality);
+  if (asset) return res.json({ success: true, status: 'ready', url: asset.url, size: asset.size });
+  res.json({ success: true, status: 'processing' });
+}));
+
+app.post('/api/ensure-compressed', express.json(), safe(async (req, res) => {
+  const slug = String((req.body || {}).slug || '').trim();
+  const quality = String((req.body || {}).quality || '360p').trim();
+  if (!slug) return res.status(400).json({ success: false, error: 'slug required' });
+  const asset = await findCompressedAsset(slug, quality);
+  if (asset) return res.json({ success: true, status: 'ready', url: asset.url, size: asset.size });
+  const dispatched = await dispatchCompress(slug, quality);
+  if (!dispatched.ok) return res.status(502).json({ success: false, error: dispatched.error });
+  res.json({ success: true, status: 'processing' });
+}));
+
 app.listen(PORT, () => console.log(`otakudesu-clean running on http://localhost:${PORT}`));

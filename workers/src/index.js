@@ -159,8 +159,9 @@ async function resolveForCompressList(slug, quality) {
     const media = resolved.media;
     if (!media || seen.has(media)) continue;
     seen.add(media);
-    const reachable = await probeCompressMedia(media, src);
-    if (!reachable) continue;
+    // Probe dari CF egress tidak reliable (dramiyos-cdn 403 di CF, tapi runner GitHub bisa download).
+    // Cukup filter host yang diketahui blok datacenter; runner akan coba tiap kandidat via ffmpeg fallback.
+    if (compressMediaBlocked(media)) continue;
     const isMp4 = /\.mp4(\?|$)/i.test(media);
     list.push({ media, referer: src, server: mirror.server, quality: mirror.quality, mp4: isMp4 });
   }

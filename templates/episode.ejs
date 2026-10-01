@@ -1,9 +1,5 @@
 <%- include('partials/header') %>
 
-<% if (ep.streams.length) { %>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/artplayer@5/dist/artplayer.css">
-<% } %>
-
 <div class="player-shell">
   <div>
     <div class="player-head">
@@ -19,9 +15,12 @@
 
     <div class="player" data-player data-default="<%= ep.defaultStreamingUrl %>">
       <div class="player-frame" data-frame>
-        <% if (ep.streams.length) { %>
+        <% if (ep.streams.length || groups.length) { %>
           <div id="art-wrap"></div>
-          <script>window.__streams = <%- JSON.stringify(ep.streams) %>;</script>
+          <script>
+            window.__streams = <%- JSON.stringify(ep.streams || []) %>;
+            window.__groups = <%- JSON.stringify(groups || []) %>;
+          </script>
         <% } else if (ep.defaultStreamingUrl) { %>
           <iframe src="<%= ep.defaultStreamingUrl %>" title="Stream" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
         <% } else { %>
@@ -52,6 +51,13 @@
         <span class="quota-list"><% ep.sizes.forEach((s) => { %><span><%= s.quality %> ≈ <%= s.size %></span><% }) %></span>
       </p>
     <% } %>
+
+    <div class="compress-box" data-compress-box data-slug="<%= activeSlug %>">
+      <button type="button" class="btn compress-btn" data-compress-btn>
+        KOMPRES &amp; NONTON (HEMAT KUOTA)
+      </button>
+      <p class="compress-status" data-compress-status hidden></p>
+    </div>
   </div>
 
   <% if (episodes.length > 0) { %>
@@ -65,7 +71,7 @@
   <% } %>
 </div>
 
-<% if (ep.streams.length) { %>
+<% if (ep.streams.length || groups.length) { %>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/artplayer@5/dist/artplayer.min.js"></script>
 <% } %>

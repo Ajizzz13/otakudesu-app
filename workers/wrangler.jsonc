@@ -3,5 +3,11 @@
   "name": "otakudesu-app",
   "main": "src/index.js",
   "compatibility_date": "2026-08-01",
-  "compatibility_flags": ["nodejs_compat"]
+  "compatibility_flags": ["nodejs_compat"],
+  "kv_namespaces": [
+    {
+      "binding": "COMPRESS_KV",
+      "id": "4f6bb5e1363e46558d686698428ffcef"
+    }
+  ]
 }

@@ -103,46 +103,41 @@
     var frame = player.querySelector('[data-frame]');
     var loading = player.querySelector('[data-loading]');
     var current = '';
+    var currentQuality = '720p';
+    var streams = window.__streams || [];
+    var groups = window.__groups || [];
+
+    // Collect available qualities: e.g. 1080p, 720p, 480p, 360p
+    var qualitySet = [];
+    ['1080p', '720p', '480p', '360p'].forEach(function (q) {
+      var inStreams = streams.some(function (s) { return s.quality === q; });
+      var inGroups = groups.some(function (g) { return g.quality === q; });
+      if (inStreams || inGroups) qualitySet.push(q);
+    });
+    if (!qualitySet.length) {
+      groups.forEach(function (g) { if (g.quality && qualitySet.indexOf(g.quality) === -1) qualitySet.push(g.quality); });
+      streams.forEach(function (s) { if (s.quality && qualitySet.indexOf(s.quality) === -1) qualitySet.push(s.quality); });
+    }
+
+    var conn = navigator.connection || {};
+    var isSlow = conn.saveData === true
+      || conn.effectiveType === '3g'
+      || conn.effectiveType === 'slow-2g'
+      || (conn.downlink != null && conn.downlink < 1.2);
+
+    currentQuality = isSlow && qualitySet.indexOf('360p') !== -1
+      ? '360p'
+      : (qualitySet.indexOf('720p') !== -1 ? '720p' : (qualitySet[0] || '360p'));
 
     function destroyArt() {
       if (window.__art) {
+        if (window.__art.hls) {
+          try { window.__art.hls.destroy(); } catch (e) {}
+          window.__art.hls = null;
+        }
         try { window.__art.destroy(); } catch (e) {}
         window.__art = null;
       }
-    }
-
-    function initArt() {
-      if (!window.Artplayer || !window.__streams || !window.__streams.length) {
-        fallbackIframe(player.getAttribute('data-default') || '');
-        return;
-      }
-      var streams = window.__streams;
-      var pick = streams.filter(function (s) { return s.quality === '720p'; })[0]
-        || streams[streams.length - 1]
-        || streams[0];
-      window.__art = new Artplayer({
-        container: '#art-wrap',
-        url: pick.url,
-        quality: streams.map(function (s) {
-          return { name: s.quality, html: s.quality, url: s.url };
-        }),
-        theme: '#b94a1e',
-        autoSize: false,
-        playbackRate: true,
-        screenshot: true,
-        setting: true,
-        fullscreen: true,
-        fullscreenWeb: true,
-        mini: true,
-        fastForward: true,
-        lock: true,
-        pip: true,
-        airplay: true,
-        lang: 'en',
-      });
-      window.__art.on('error', function () {
-        fallbackIframe(player.getAttribute('data-default') || '');
-      });
     }
 
     function fallbackIframe(url) {
@@ -161,34 +156,120 @@
     }
 
     function setSrc(url) {
-      destroyArt();
-      current = url;
-      if (loading) loading.hidden = !url;
-      if (frame && url) {
-        var el = document.createElement('iframe');
-        el.src = url;
-        el.title = 'Stream';
-        el.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
-        el.setAttribute('allowfullscreen', '');
-        frame.innerHTML = '';
-        frame.appendChild(el);
-      }
+      fallbackIframe(url);
     }
 
-    initArt();
+    function syncDropdowns(q) {
+      player.querySelectorAll('.server-select').forEach(function (s) {
+        if (s.getAttribute('data-quality') === q) {
+          s.parentElement.style.opacity = '1';
+        } else {
+          s.parentElement.style.opacity = '0.55';
+        }
+      });
+    }
 
-    function playMedia(url) {
+    function getPayloadsForQuality(q) {
+      var payloads = [];
+      groups.forEach(function (g) {
+        if (g.quality === q && g.options) {
+          g.options.forEach(function (o) { if (o.payload) payloads.push(o.payload); });
+        }
+      });
+      groups.forEach(function (g) {
+        if (g.quality !== q && g.options) {
+          g.options.forEach(function (o) { if (o.payload) payloads.push(o.payload); });
+        }
+      });
+      return payloads.filter(function (v, i, a) { return a.indexOf(v) === i; });
+    }
+
+    async function resolveQualityMedia(targetQ) {
+      var direct = streams.find(function (s) { return s.quality === targetQ && s.url; });
+      if (direct) {
+        return { type: 'media', url: direct.url, quality: targetQ };
+      }
+      var payloads = getPayloadsForQuality(targetQ);
+      if (!payloads.length) return null;
+
+      var res = await fetch('/api/stream-direct-mirror', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payloads: payloads })
+      });
+      var data = await res.json();
+      if (data && data.success && data.data) {
+        if (data.data.media) return { type: 'media', url: data.data.media, quality: targetQ };
+        if (data.data.src) return { type: 'iframe', url: data.data.src, quality: targetQ };
+      }
+      return null;
+    }
+
+    function createArt(initialUrl, initialQuality) {
       destroyArt();
       var wrap = document.getElementById('art-wrap');
       if (!window.Artplayer || !wrap) {
-        setSrc(player.getAttribute('data-default') || '');
+        fallbackIframe(player.getAttribute('data-default') || '');
         return;
       }
-      var isHls = /\.m3u8($|\?)/i.test(url);
+
+      currentQuality = initialQuality || currentQuality;
+
+      var selectorList = qualitySet.map(function (q) {
+        return {
+          default: q === currentQuality,
+          html: q.toUpperCase(),
+          value: q
+        };
+      });
+
+      var controls = [];
+      if (qualitySet.length > 1) {
+        controls.push({
+          name: 'resolution',
+          position: 'right',
+          index: 10,
+          style: { marginRight: '10px' },
+          html: currentQuality.toUpperCase(),
+          tooltip: 'Kualitas Video',
+          selector: selectorList,
+          onSelect: async function (item) {
+            var targetQ = item.value;
+            if (targetQ === currentQuality) return item.html;
+            var art = this;
+            art.notice.show = 'Memuat ' + item.html + '…';
+            try {
+              var resolved = await resolveQualityMedia(targetQ);
+              if (!resolved) {
+                art.notice.show = 'Gagal memuat ' + item.html;
+                return currentQuality.toUpperCase();
+              }
+              if (resolved.type === 'media') {
+                if (art.hls && !/\.m3u8($|\?)/i.test(resolved.url)) {
+                  try { art.hls.destroy(); } catch (e) {}
+                  art.hls = null;
+                }
+                await art.switchQuality(resolved.url);
+                currentQuality = targetQ;
+                syncDropdowns(targetQ);
+                art.notice.show = 'Kualitas: ' + item.html;
+                return item.html;
+              } else if (resolved.type === 'iframe') {
+                fallbackIframe(resolved.url);
+                return item.html;
+              }
+            } catch (err) {
+              art.notice.show = 'Error: ' + err.message;
+              return currentQuality.toUpperCase();
+            }
+            return item.html;
+          }
+        });
+      }
+
       window.__art = new Artplayer({
         container: '#art-wrap',
-        url: url,
-        type: isHls ? 'm3u8' : (/\.mp4($|\?)/i.test(url) ? 'mp4' : ''),
+        url: initialUrl,
         theme: '#b94a1e',
         autoSize: false,
         playbackRate: true,
@@ -202,37 +283,96 @@
         pip: true,
         airplay: true,
         lang: 'en',
+        controls: controls,
         customType: {
-          m3u8: function (video, src) {
+          m3u8: function (video, src, art) {
+            if (art.hls) {
+              try { art.hls.destroy(); } catch (e) {}
+              art.hls = null;
+            }
             if (window.Hls && window.Hls.isSupported()) {
               var hls = new window.Hls({ maxBufferLength: 30 });
               hls.loadSource(src);
               hls.attachMedia(video);
+              art.hls = hls;
+              art.on('destroy', function () {
+                try { hls.destroy(); } catch (e) {}
+              });
               return;
             }
             if (video.canPlayType('application/vnd.apple.mpegurl')) {
               video.src = src;
             }
-          },
-        },
+          }
+        }
       });
+
       window.__art.on('error', function () {
         fallbackIframe(player.getAttribute('data-default') || '');
       });
+
       if (loading) loading.hidden = true;
+      syncDropdowns(currentQuality);
     }
 
+    function playMedia(url) {
+      if (window.__art && window.__art.isReady) {
+        if (window.__art.hls && !/\.m3u8($|\?)/i.test(url)) {
+          try { window.__art.hls.destroy(); } catch (e) {}
+          window.__art.hls = null;
+        }
+        window.__art.switchQuality(url);
+      } else {
+        createArt(url, currentQuality);
+      }
+    }
+
+    async function initPlayer() {
+      // 1. Direct streams if available
+      var direct = streams.find(function (s) { return s.quality === currentQuality && s.url; })
+        || streams.find(function (s) { return s.quality === '720p' && s.url; })
+        || streams[0];
+
+      if (direct && direct.url) {
+        createArt(direct.url, direct.quality);
+        return;
+      }
+
+      // 2. Resolve preferred quality from mirrors
+      if (groups.length) {
+        if (loading) loading.hidden = false;
+        try {
+          var res = await resolveQualityMedia(currentQuality);
+          if (res && res.type === 'media') {
+            createArt(res.url, currentQuality);
+            return;
+          }
+          if (res && res.type === 'iframe') {
+            fallbackIframe(res.url);
+            return;
+          }
+        } catch (e) {}
+      }
+
+      // 3. Fallback to default iframe
+      var def = player.getAttribute('data-default') || '';
+      if (def) {
+        fallbackIframe(def);
+      } else {
+        if (loading) loading.hidden = true;
+      }
+    }
+
+    initPlayer();
+
+    // Sync external server selects
     player.querySelectorAll('.server-select').forEach(function (sel) {
       sel.addEventListener('change', function () {
         var payload = sel.value;
         if (!payload) return;
-        var payloads = [];
-        sel.querySelectorAll('option').forEach(function (o) { if (o.value) payloads.push(o.value); });
-        player.querySelectorAll('.server-select').forEach(function (other) {
-          if (other === sel) return;
-          other.querySelectorAll('option').forEach(function (o) { if (o.value) payloads.push(o.value); });
-        });
-        payloads = payloads.filter(function (v, i) { return payloads.indexOf(v) === i; });
+        var q = sel.getAttribute('data-quality') || currentQuality;
+        var payloads = [payload];
+        sel.querySelectorAll('option').forEach(function (o) { if (o.value && o.value !== payload) payloads.push(o.value); });
         if (loading) loading.hidden = false;
         fetch('/api/stream-direct-mirror', {
           method: 'POST',
@@ -242,35 +382,121 @@
           .then(function (r) { return r.json(); })
           .then(function (data) {
             if (data && data.success && data.data && data.data.media) {
-              playMedia(data.data.media);
+              if (window.__art && window.__art.isReady) {
+                currentQuality = q;
+                if (window.__art.hls && !/\.m3u8($|\?)/i.test(data.data.media)) {
+                  try { window.__art.hls.destroy(); } catch (e) {}
+                  window.__art.hls = null;
+                }
+                window.__art.switchQuality(data.data.media);
+                syncDropdowns(q);
+              } else {
+                createArt(data.data.media, q);
+              }
             } else if (data && data.success && data.data && data.data.src) {
-              setSrc(data.data.src);
+              fallbackIframe(data.data.src);
             } else if (loading) { loading.hidden = true; }
           })
           .catch(function () { if (loading) loading.hidden = true; });
       });
     });
 
-    (function dataSaver() {
-      var conn = navigator.connection || {};
-      var slow = conn.saveData === true
-        || conn.effectiveType === '3g'
-        || conn.effectiveType === 'slow-2g'
-        || (conn.downlink != null && conn.downlink < 1.2);
-      if (!slow) return;
-      var pick = null;
-      player.querySelectorAll('.server-select').forEach(function (s) {
-        if (s.getAttribute('data-quality') === '360p' && !pick) pick = s;
-      });
-      if (!pick) return;
-      pick.value = pick.options[0] ? pick.options[0].value : pick.value;
-      pick.dispatchEvent(new Event('change'));
+    if (isSlow) {
       var note = document.createElement('p');
       note.className = 'quota';
       note.style.marginTop = '10px';
       note.innerHTML = '<span class="quota-label" style="color:var(--color-accent-text)">DATA SAVER</span>' +
         '<span class="quota-list"><span>360p otomatis · hemat ±60% kuota</span></span>';
       player.parentElement.appendChild(note);
+    }
+
+    (function compressFlow() {
+      var box = document.querySelector('[data-compress-box]');
+      if (!box) return;
+      var btn = box.querySelector('[data-compress-btn]');
+      var status = box.querySelector('[data-compress-status]');
+      var slug = box.getAttribute('data-slug');
+      if (!btn || !slug) return;
+
+      function setStatus(text, tone) {
+        status.hidden = false;
+        status.textContent = text;
+        status.setAttribute('data-tone', tone || 'info');
+      }
+
+      function pickQuality() {
+        var sel = null;
+        player.querySelectorAll('.server-select').forEach(function (s) {
+          if (s.getAttribute('data-quality') === '360p' && !sel) sel = s;
+        });
+        if (!sel) {
+          player.querySelectorAll('.server-select').forEach(function (s) { if (!sel) sel = s; });
+        }
+        var q = sel ? sel.getAttribute('data-quality') : '360p';
+        return q || '360p';
+      }
+
+      function playUrl(url) {
+        setStatus('SIAP · memuat versi hemat…', 'ok');
+        playMedia(url);
+      }
+
+      function poll(quality, tries) {
+        if (tries > 80) {
+          setStatus('Gagal / timeout. Coba tombol lagi nanti.', 'err');
+          btn.disabled = false;
+          return;
+        }
+        fetch('/api/compress-status?slug=' + encodeURIComponent(slug) + '&quality=' + encodeURIComponent(quality))
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (data && data.success && data.status === 'ready' && data.url) {
+              var mb = data.size ? ' (' + (data.size / 1048576).toFixed(1) + 'MB)' : '';
+              setStatus('SIAP' + mb + ' · memuat…', 'ok');
+              playUrl(data.url);
+              btn.disabled = false;
+              return;
+            }
+            var remain = Math.max(0, 80 - tries);
+            setStatus('SEDANG DIKOMPRES… (' + (tries * 15) + 's) · jangan tutup', 'info');
+            setTimeout(function () { poll(quality, tries + 1); }, 15000);
+          })
+          .catch(function () {
+            setTimeout(function () { poll(quality, tries + 1); }, 15000);
+          });
+      }
+
+      btn.addEventListener('click', function () {
+        var quality = pickQuality();
+        btn.disabled = true;
+        setStatus('Menghubungi server…', 'info');
+        fetch('/api/ensure-compressed', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slug: slug, quality: quality }),
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (data && data.success && data.status === 'ready' && data.url) {
+              var mb = data.size ? ' (' + (data.size / 1048576).toFixed(1) + 'MB)' : '';
+              setStatus('SIAP' + mb + ' · memuat…', 'ok');
+              playUrl(data.url);
+              btn.disabled = false;
+              return;
+            }
+            if (data && data.success && data.status === 'processing') {
+              setStatus('SEDANG DIKOMPRES… (~3 menit) · jangan tutup', 'info');
+              poll(quality, 1);
+              return;
+            }
+            setStatus('Gagal: ' + ((data && data.error) || 'unknown'), 'err');
+            btn.disabled = false;
+          })
+          .catch(function () {
+            setStatus('Gagal menghubungi server.', 'err');
+            btn.disabled = false;
+          });
+      });
     })();
   }
 

@@ -24,7 +24,7 @@ function encode_char(c) {
   function __append(s) { if (s !== undefined && s !== null) __output += s }
     ; __append("<!DOCTYPE html>\n<html lang=\"id\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <title>")
     ; __append(escapeFn( locals.title ))
-    ; __append(" · OTAKUDESU CLEAN</title>\n  <meta name=\"description\" content=\"Streaming anime subtitle Indonesia tanpa iklan. Sumber data: otakudesu.blog.\">\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link href=\"https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <link rel=\"stylesheet\" href=\"/css/style.css?v=6\">\n</head>\n<body>\n  <header class=\"site-header\">\n    <div class=\"wrap header-row\">\n      <a href=\"/\" class=\"brand\"><span class=\"brand-mark\"></span>OTAKUDESU</a>\n      <nav class=\"site-nav\" aria-label=\"Main\">\n        ")
+    ; __append(" · OTAKUDESU CLEAN</title>\n  <meta name=\"description\" content=\"Streaming anime subtitle Indonesia tanpa iklan. Sumber data: otakudesu.blog.\">\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link href=\"https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <link rel=\"stylesheet\" href=\"/css/style.css?v=9\">\n</head>\n<body>\n  <header class=\"site-header\">\n    <div class=\"wrap header-row\">\n      <a href=\"/\" class=\"brand\"><span class=\"brand-mark\"></span>OTAKUDESU</a>\n      <nav class=\"site-nav\" aria-label=\"Main\">\n        ")
     ;  const links = [['/','Home'],['/ongoing-anime/','On-Going'],['/complete-anime/','Complete'],['/anime-list/','Anime List'],['/jadwal-rilis/','Jadwal']]; 
     ; __append("\n        ")
     ;  links.forEach(([href,label]) => { 
@@ -52,7 +52,7 @@ function encode_char(c) {
     ;  }) 
     ; __append("\n  </div>\n")
     ;  } 
-    ; __append("\n\n</main>\n  <footer class=\"site-footer\">\n    <div class=\"wrap foot-row\">\n      <span>OTAKUDESU CLEAN · HALLMARK SYSTEM</span>\n      <span>DATA: otakudesu.blog</span>\n    </div>\n  </footer>\n  <script src=\"/js/app.js?v=7\"></script>\n</body>\n</html>")
+    ; __append("\n\n</main>\n  <footer class=\"site-footer\">\n    <div class=\"wrap foot-row\">\n      <span>OTAKUDESU CLEAN · HALLMARK SYSTEM</span>\n      <span>DATA: otakudesu.blog</span>\n    </div>\n  </footer>\n  <script src=\"/js/app.js?v=9\"></script>\n</body>\n</html>")
   return __output;
 
 },
@@ -80,7 +80,7 @@ function encode_char(c) {
   function __append(s) { if (s !== undefined && s !== null) __output += s }
     ; __append("<!DOCTYPE html>\n<html lang=\"id\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <title>")
     ; __append(escapeFn( locals.title ))
-    ; __append(" · OTAKUDESU CLEAN</title>\n  <meta name=\"description\" content=\"Streaming anime subtitle Indonesia tanpa iklan. Sumber data: otakudesu.blog.\">\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link href=\"https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <link rel=\"stylesheet\" href=\"/css/style.css?v=6\">\n</head>\n<body>\n  <header class=\"site-header\">\n    <div class=\"wrap header-row\">\n      <a href=\"/\" class=\"brand\"><span class=\"brand-mark\"></span>OTAKUDESU</a>\n      <nav class=\"site-nav\" aria-label=\"Main\">\n        ")
+    ; __append(" · OTAKUDESU CLEAN</title>\n  <meta name=\"description\" content=\"Streaming anime subtitle Indonesia tanpa iklan. Sumber data: otakudesu.blog.\">\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link href=\"https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <link rel=\"stylesheet\" href=\"/css/style.css?v=9\">\n</head>\n<body>\n  <header class=\"site-header\">\n    <div class=\"wrap header-row\">\n      <a href=\"/\" class=\"brand\"><span class=\"brand-mark\"></span>OTAKUDESU</a>\n      <nav class=\"site-nav\" aria-label=\"Main\">\n        ")
     ;  const links = [['/','Home'],['/ongoing-anime/','On-Going'],['/complete-anime/','Complete'],['/anime-list/','Anime List'],['/jadwal-rilis/','Jadwal']]; 
     ; __append("\n        ")
     ;  links.forEach(([href,label]) => { 
@@ -215,7 +215,7 @@ function encode_char(c) {
     ;  }) 
     ; __append("\n  </div>\n")
     ;  } 
-    ; __append("\n</section>\n\n</main>\n  <footer class=\"site-footer\">\n    <div class=\"wrap foot-row\">\n      <span>OTAKUDESU CLEAN · HALLMARK SYSTEM</span>\n      <span>DATA: otakudesu.blog</span>\n    </div>\n  </footer>\n  <script src=\"/js/app.js?v=7\"></script>\n</body>\n</html>")
+    ; __append("\n</section>\n\n</main>\n  <footer class=\"site-footer\">\n    <div class=\"wrap foot-row\">\n      <span>OTAKUDESU CLEAN · HALLMARK SYSTEM</span>\n      <span>DATA: otakudesu.blog</span>\n    </div>\n  </footer>\n  <script src=\"/js/app.js?v=9\"></script>\n</body>\n</html>")
   return __output;
 
 },
@@ -243,7 +243,7 @@ function encode_char(c) {
   function __append(s) { if (s !== undefined && s !== null) __output += s }
     ; __append("<!DOCTYPE html>\n<html lang=\"id\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <title>")
     ; __append(escapeFn( locals.title ))
-    ; __append(" · OTAKUDESU CLEAN</title>\n  <meta name=\"description\" content=\"Streaming anime subtitle Indonesia tanpa iklan. Sumber data: otakudesu.blog.\">\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link href=\"https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <link rel=\"stylesheet\" href=\"/css/style.css?v=6\">\n</head>\n<body>\n  <header class=\"site-header\">\n    <div class=\"wrap header-row\">\n      <a href=\"/\" class=\"brand\"><span class=\"brand-mark\"></span>OTAKUDESU</a>\n      <nav class=\"site-nav\" aria-label=\"Main\">\n        ")
+    ; __append(" · OTAKUDESU CLEAN</title>\n  <meta name=\"description\" content=\"Streaming anime subtitle Indonesia tanpa iklan. Sumber data: otakudesu.blog.\">\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link href=\"https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <link rel=\"stylesheet\" href=\"/css/style.css?v=9\">\n</head>\n<body>\n  <header class=\"site-header\">\n    <div class=\"wrap header-row\">\n      <a href=\"/\" class=\"brand\"><span class=\"brand-mark\"></span>OTAKUDESU</a>\n      <nav class=\"site-nav\" aria-label=\"Main\">\n        ")
     ;  const links = [['/','Home'],['/ongoing-anime/','On-Going'],['/complete-anime/','Complete'],['/anime-list/','Anime List'],['/jadwal-rilis/','Jadwal']]; 
     ; __append("\n        ")
     ;  links.forEach(([href,label]) => { 
@@ -255,11 +255,7 @@ function encode_char(c) {
     ; __append(escapeFn( label ))
     ; __append("</a>\n        ")
     ;  }) 
-    ; __append("\n      </nav>\n      <div class=\"search\" id=\"search\">\n        <input type=\"search\" id=\"search-input\" placeholder=\"Search titles…\" aria-label=\"Search anime\" autocomplete=\"off\">\n        <div class=\"search-drop\" id=\"search-drop\" hidden></div>\n      </div>\n    </div>\n  </header>\n  <main class=\"wrap page\">\n\n")
-    ;  if (locals.ep.streams.length) { 
-    ; __append("\n  <link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/artplayer@5/dist/artplayer.css\">\n")
-    ;  } 
-    ; __append("\n\n<div class=\"player-shell\">\n  <div>\n    <div class=\"player-head\">\n      <h1 class=\"player-title\">")
+    ; __append("\n      </nav>\n      <div class=\"search\" id=\"search\">\n        <input type=\"search\" id=\"search-input\" placeholder=\"Search titles…\" aria-label=\"Search anime\" autocomplete=\"off\">\n        <div class=\"search-drop\" id=\"search-drop\" hidden></div>\n      </div>\n    </div>\n  </header>\n  <main class=\"wrap page\">\n\n<div class=\"player-shell\">\n  <div>\n    <div class=\"player-head\">\n      <h1 class=\"player-title\">")
     ; __append(escapeFn( locals.ep.title ))
     ; __append("</h1>\n      <nav class=\"ep-nav\" aria-label=\"Episode navigation\">\n        ")
     ;  if (locals.ep.navigation.prev) { 
@@ -286,10 +282,12 @@ function encode_char(c) {
     ; __append("\n      </nav>\n    </div>\n\n    <div class=\"player\" data-player data-default=\"")
     ; __append(escapeFn( locals.ep.defaultStreamingUrl ))
     ; __append("\">\n      <div class=\"player-frame\" data-frame>\n        ")
-    ;  if (locals.ep.streams.length) { 
-    ; __append("\n          <div id=\"art-wrap\"></div>\n          <script>window.__streams = ")
-    ; __append( JSON.stringify(locals.ep.streams) )
-    ; __append(";</script>\n        ")
+    ;  if (locals.ep.streams.length || locals.groups.length) { 
+    ; __append("\n          <div id=\"art-wrap\"></div>\n          <script>\n            window.__streams = ")
+    ; __append( JSON.stringify(locals.ep.streams || []) )
+    ; __append(";\n            window.__groups = ")
+    ; __append( JSON.stringify(locals.groups || []) )
+    ; __append(";\n          </script>\n        ")
     ;  } else if (locals.ep.defaultStreamingUrl) { 
     ; __append("\n          <iframe src=\"")
     ; __append(escapeFn( locals.ep.defaultStreamingUrl ))
@@ -333,7 +331,9 @@ function encode_char(c) {
     ;  }) 
     ; __append("</span>\n      </p>\n    ")
     ;  } 
-    ; __append("\n  </div>\n\n  ")
+    ; __append("\n\n    <div class=\"compress-box\" data-compress-box data-slug=\"")
+    ; __append(escapeFn( locals.activeSlug ))
+    ; __append("\">\n      <button type=\"button\" class=\"btn compress-btn\" data-compress-btn>\n        KOMPRES &amp; NONTON (HEMAT KUOTA)\n      </button>\n      <p class=\"compress-status\" data-compress-status hidden></p>\n    </div>\n  </div>\n\n  ")
     ;  if (locals.episodes.length > 0) { 
     ; __append("\n    <aside>\n      <div class=\"ep-head-row\">\n        <h2 class=\"rail-title\">Episodes</h2>\n        <span class=\"rail-count\">")
     ; __append(escapeFn( locals.episodes.length ))
@@ -371,10 +371,10 @@ function encode_char(c) {
     ; __append("\n    </aside>\n  ")
     ;  } 
     ; __append("\n</div>\n\n")
-    ;  if (locals.ep.streams.length) { 
+    ;  if (locals.ep.streams.length || locals.groups.length) { 
     ; __append("\n  <script src=\"https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js\"></script>\n  <script src=\"https://cdn.jsdelivr.net/npm/artplayer@5/dist/artplayer.min.js\"></script>\n")
     ;  } 
-    ; __append("\n\n</main>\n  <footer class=\"site-footer\">\n    <div class=\"wrap foot-row\">\n      <span>OTAKUDESU CLEAN · HALLMARK SYSTEM</span>\n      <span>DATA: otakudesu.blog</span>\n    </div>\n  </footer>\n  <script src=\"/js/app.js?v=7\"></script>\n</body>\n</html>")
+    ; __append("\n\n</main>\n  <footer class=\"site-footer\">\n    <div class=\"wrap foot-row\">\n      <span>OTAKUDESU CLEAN · HALLMARK SYSTEM</span>\n      <span>DATA: otakudesu.blog</span>\n    </div>\n  </footer>\n  <script src=\"/js/app.js?v=9\"></script>\n</body>\n</html>")
   return __output;
 
 },
@@ -400,9 +400,9 @@ function encode_char(c) {
 ;
   var __output = "";
   function __append(s) { if (s !== undefined && s !== null) __output += s }
-    ; __append("<!DOCTYPE html>\n<html lang=\"id\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <title>NO SIGNAL · OTAKUDESU CLEAN</title>\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link href=\"https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <link rel=\"stylesheet\" href=\"/css/style.css?v=6\">\n</head>\n<body>\n  <main class=\"wrap page center-err\">\n    <span class=\"err-code\">NO SIGNAL</span>\n    <p class=\"err-msg\">")
+    ; __append("<!DOCTYPE html>\n<html lang=\"id\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <title>NO SIGNAL · OTAKUDESU CLEAN</title>\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link href=\"https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <link rel=\"stylesheet\" href=\"/css/style.css?v=9\">\n</head>\n<body>\n  <main class=\"wrap page center-err\">\n    <span class=\"err-code\">NO SIGNAL</span>\n    <p class=\"err-msg\">")
     ; __append(escapeFn( locals.message ))
-    ; __append("</p>\n    <a class=\"btn btn-ghost\" href=\"/\">Kembali ke Home</a>\n  </main>\n  <script src=\"/js/app.js?v=7\"></script>\n</body>\n</html>")
+    ; __append("</p>\n    <a class=\"btn btn-ghost\" href=\"/\">Kembali ke Home</a>\n  </main>\n  <script src=\"/js/app.js?v=9\"></script>\n</body>\n</html>")
   return __output;
 
 },
@@ -430,7 +430,7 @@ function encode_char(c) {
   function __append(s) { if (s !== undefined && s !== null) __output += s }
     ; __append("<!DOCTYPE html>\n<html lang=\"id\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <title>")
     ; __append(escapeFn( locals.title ))
-    ; __append(" · OTAKUDESU CLEAN</title>\n  <meta name=\"description\" content=\"Streaming anime subtitle Indonesia tanpa iklan. Sumber data: otakudesu.blog.\">\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link href=\"https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <link rel=\"stylesheet\" href=\"/css/style.css?v=6\">\n</head>\n<body>\n  <header class=\"site-header\">\n    <div class=\"wrap header-row\">\n      <a href=\"/\" class=\"brand\"><span class=\"brand-mark\"></span>OTAKUDESU</a>\n      <nav class=\"site-nav\" aria-label=\"Main\">\n        ")
+    ; __append(" · OTAKUDESU CLEAN</title>\n  <meta name=\"description\" content=\"Streaming anime subtitle Indonesia tanpa iklan. Sumber data: otakudesu.blog.\">\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link href=\"https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <link rel=\"stylesheet\" href=\"/css/style.css?v=9\">\n</head>\n<body>\n  <header class=\"site-header\">\n    <div class=\"wrap header-row\">\n      <a href=\"/\" class=\"brand\"><span class=\"brand-mark\"></span>OTAKUDESU</a>\n      <nav class=\"site-nav\" aria-label=\"Main\">\n        ")
     ;  const links = [['/','Home'],['/ongoing-anime/','On-Going'],['/complete-anime/','Complete'],['/anime-list/','Anime List'],['/jadwal-rilis/','Jadwal']]; 
     ; __append("\n        ")
     ;  links.forEach(([href,label]) => { 
@@ -450,7 +450,7 @@ function encode_char(c) {
     ; __append(escapeFn( g.name ))
     ; __append("</a>\n  ")
     ;  }) 
-    ; __append("\n</div>\n\n</main>\n  <footer class=\"site-footer\">\n    <div class=\"wrap foot-row\">\n      <span>OTAKUDESU CLEAN · HALLMARK SYSTEM</span>\n      <span>DATA: otakudesu.blog</span>\n    </div>\n  </footer>\n  <script src=\"/js/app.js?v=7\"></script>\n</body>\n</html>")
+    ; __append("\n</div>\n\n</main>\n  <footer class=\"site-footer\">\n    <div class=\"wrap foot-row\">\n      <span>OTAKUDESU CLEAN · HALLMARK SYSTEM</span>\n      <span>DATA: otakudesu.blog</span>\n    </div>\n  </footer>\n  <script src=\"/js/app.js?v=9\"></script>\n</body>\n</html>")
   return __output;
 
 },
@@ -478,7 +478,7 @@ function encode_char(c) {
   function __append(s) { if (s !== undefined && s !== null) __output += s }
     ; __append("<!DOCTYPE html>\n<html lang=\"id\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <title>")
     ; __append(escapeFn( locals.title ))
-    ; __append(" · OTAKUDESU CLEAN</title>\n  <meta name=\"description\" content=\"Streaming anime subtitle Indonesia tanpa iklan. Sumber data: otakudesu.blog.\">\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link href=\"https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <link rel=\"stylesheet\" href=\"/css/style.css?v=6\">\n</head>\n<body>\n  <header class=\"site-header\">\n    <div class=\"wrap header-row\">\n      <a href=\"/\" class=\"brand\"><span class=\"brand-mark\"></span>OTAKUDESU</a>\n      <nav class=\"site-nav\" aria-label=\"Main\">\n        ")
+    ; __append(" · OTAKUDESU CLEAN</title>\n  <meta name=\"description\" content=\"Streaming anime subtitle Indonesia tanpa iklan. Sumber data: otakudesu.blog.\">\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link href=\"https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <link rel=\"stylesheet\" href=\"/css/style.css?v=9\">\n</head>\n<body>\n  <header class=\"site-header\">\n    <div class=\"wrap header-row\">\n      <a href=\"/\" class=\"brand\"><span class=\"brand-mark\"></span>OTAKUDESU</a>\n      <nav class=\"site-nav\" aria-label=\"Main\">\n        ")
     ;  const links = [['/','Home'],['/ongoing-anime/','On-Going'],['/complete-anime/','Complete'],['/anime-list/','Anime List'],['/jadwal-rilis/','Jadwal']]; 
     ; __append("\n        ")
     ;  links.forEach(([href,label]) => { 
@@ -620,7 +620,7 @@ function encode_char(c) {
     ;  }) 
     ; __append("\n    </div>\n  ")
     ;  } 
-    ; __append("\n</section>\n\n</main>\n  <footer class=\"site-footer\">\n    <div class=\"wrap foot-row\">\n      <span>OTAKUDESU CLEAN · HALLMARK SYSTEM</span>\n      <span>DATA: otakudesu.blog</span>\n    </div>\n  </footer>\n  <script src=\"/js/app.js?v=7\"></script>\n</body>\n</html>")
+    ; __append("\n</section>\n\n</main>\n  <footer class=\"site-footer\">\n    <div class=\"wrap foot-row\">\n      <span>OTAKUDESU CLEAN · HALLMARK SYSTEM</span>\n      <span>DATA: otakudesu.blog</span>\n    </div>\n  </footer>\n  <script src=\"/js/app.js?v=9\"></script>\n</body>\n</html>")
   return __output;
 
 },
@@ -648,7 +648,7 @@ function encode_char(c) {
   function __append(s) { if (s !== undefined && s !== null) __output += s }
     ; __append("<!DOCTYPE html>\n<html lang=\"id\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <title>")
     ; __append(escapeFn( locals.title ))
-    ; __append(" · OTAKUDESU CLEAN</title>\n  <meta name=\"description\" content=\"Streaming anime subtitle Indonesia tanpa iklan. Sumber data: otakudesu.blog.\">\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link href=\"https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <link rel=\"stylesheet\" href=\"/css/style.css?v=6\">\n</head>\n<body>\n  <header class=\"site-header\">\n    <div class=\"wrap header-row\">\n      <a href=\"/\" class=\"brand\"><span class=\"brand-mark\"></span>OTAKUDESU</a>\n      <nav class=\"site-nav\" aria-label=\"Main\">\n        ")
+    ; __append(" · OTAKUDESU CLEAN</title>\n  <meta name=\"description\" content=\"Streaming anime subtitle Indonesia tanpa iklan. Sumber data: otakudesu.blog.\">\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link href=\"https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <link rel=\"stylesheet\" href=\"/css/style.css?v=9\">\n</head>\n<body>\n  <header class=\"site-header\">\n    <div class=\"wrap header-row\">\n      <a href=\"/\" class=\"brand\"><span class=\"brand-mark\"></span>OTAKUDESU</a>\n      <nav class=\"site-nav\" aria-label=\"Main\">\n        ")
     ;  const links = [['/','Home'],['/ongoing-anime/','On-Going'],['/complete-anime/','Complete'],['/anime-list/','Anime List'],['/jadwal-rilis/','Jadwal']]; 
     ; __append("\n        ")
     ;  links.forEach(([href,label]) => { 
@@ -736,7 +736,7 @@ function encode_char(c) {
     ;  } 
     ; __append("\n  </nav>\n")
     ;  } 
-    ; __append("\n\n</main>\n  <footer class=\"site-footer\">\n    <div class=\"wrap foot-row\">\n      <span>OTAKUDESU CLEAN · HALLMARK SYSTEM</span>\n      <span>DATA: otakudesu.blog</span>\n    </div>\n  </footer>\n  <script src=\"/js/app.js?v=7\"></script>\n</body>\n</html>")
+    ; __append("\n\n</main>\n  <footer class=\"site-footer\">\n    <div class=\"wrap foot-row\">\n      <span>OTAKUDESU CLEAN · HALLMARK SYSTEM</span>\n      <span>DATA: otakudesu.blog</span>\n    </div>\n  </footer>\n  <script src=\"/js/app.js?v=9\"></script>\n</body>\n</html>")
   return __output;
 
 },
@@ -764,7 +764,7 @@ function encode_char(c) {
   function __append(s) { if (s !== undefined && s !== null) __output += s }
     ; __append("<!DOCTYPE html>\n<html lang=\"id\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <title>")
     ; __append(escapeFn( locals.title ))
-    ; __append(" · OTAKUDESU CLEAN</title>\n  <meta name=\"description\" content=\"Streaming anime subtitle Indonesia tanpa iklan. Sumber data: otakudesu.blog.\">\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link href=\"https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <link rel=\"stylesheet\" href=\"/css/style.css?v=6\">\n</head>\n<body>\n  <header class=\"site-header\">\n    <div class=\"wrap header-row\">\n      <a href=\"/\" class=\"brand\"><span class=\"brand-mark\"></span>OTAKUDESU</a>\n      <nav class=\"site-nav\" aria-label=\"Main\">\n        ")
+    ; __append(" · OTAKUDESU CLEAN</title>\n  <meta name=\"description\" content=\"Streaming anime subtitle Indonesia tanpa iklan. Sumber data: otakudesu.blog.\">\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link href=\"https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <link rel=\"stylesheet\" href=\"/css/style.css?v=9\">\n</head>\n<body>\n  <header class=\"site-header\">\n    <div class=\"wrap header-row\">\n      <a href=\"/\" class=\"brand\"><span class=\"brand-mark\"></span>OTAKUDESU</a>\n      <nav class=\"site-nav\" aria-label=\"Main\">\n        ")
     ;  const links = [['/','Home'],['/ongoing-anime/','On-Going'],['/complete-anime/','Complete'],['/anime-list/','Anime List'],['/jadwal-rilis/','Jadwal']]; 
     ; __append("\n        ")
     ;  links.forEach(([href,label]) => { 
@@ -798,7 +798,7 @@ function encode_char(c) {
     ;  }) 
     ; __append("\n      </ul>\n    </div>\n  ")
     ;  }) 
-    ; __append("\n</div>\n\n</main>\n  <footer class=\"site-footer\">\n    <div class=\"wrap foot-row\">\n      <span>OTAKUDESU CLEAN · HALLMARK SYSTEM</span>\n      <span>DATA: otakudesu.blog</span>\n    </div>\n  </footer>\n  <script src=\"/js/app.js?v=7\"></script>\n</body>\n</html>")
+    ; __append("\n</div>\n\n</main>\n  <footer class=\"site-footer\">\n    <div class=\"wrap foot-row\">\n      <span>OTAKUDESU CLEAN · HALLMARK SYSTEM</span>\n      <span>DATA: otakudesu.blog</span>\n    </div>\n  </footer>\n  <script src=\"/js/app.js?v=9\"></script>\n</body>\n</html>")
   return __output;
 
 },
@@ -826,7 +826,7 @@ function encode_char(c) {
   function __append(s) { if (s !== undefined && s !== null) __output += s }
     ; __append("<!DOCTYPE html>\n<html lang=\"id\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <title>")
     ; __append(escapeFn( locals.title ))
-    ; __append(" · OTAKUDESU CLEAN</title>\n  <meta name=\"description\" content=\"Streaming anime subtitle Indonesia tanpa iklan. Sumber data: otakudesu.blog.\">\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link href=\"https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <link rel=\"stylesheet\" href=\"/css/style.css?v=6\">\n</head>\n<body>\n  <header class=\"site-header\">\n    <div class=\"wrap header-row\">\n      <a href=\"/\" class=\"brand\"><span class=\"brand-mark\"></span>OTAKUDESU</a>\n      <nav class=\"site-nav\" aria-label=\"Main\">\n        ")
+    ; __append(" · OTAKUDESU CLEAN</title>\n  <meta name=\"description\" content=\"Streaming anime subtitle Indonesia tanpa iklan. Sumber data: otakudesu.blog.\">\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link href=\"https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <link rel=\"stylesheet\" href=\"/css/style.css?v=9\">\n</head>\n<body>\n  <header class=\"site-header\">\n    <div class=\"wrap header-row\">\n      <a href=\"/\" class=\"brand\"><span class=\"brand-mark\"></span>OTAKUDESU</a>\n      <nav class=\"site-nav\" aria-label=\"Main\">\n        ")
     ;  const links = [['/','Home'],['/ongoing-anime/','On-Going'],['/complete-anime/','Complete'],['/anime-list/','Anime List'],['/jadwal-rilis/','Jadwal']]; 
     ; __append("\n        ")
     ;  links.forEach(([href,label]) => { 
@@ -892,7 +892,7 @@ function encode_char(c) {
     ;  }) 
     ; __append("\n  </div>\n")
     ;  } 
-    ; __append("\n\n</main>\n  <footer class=\"site-footer\">\n    <div class=\"wrap foot-row\">\n      <span>OTAKUDESU CLEAN · HALLMARK SYSTEM</span>\n      <span>DATA: otakudesu.blog</span>\n    </div>\n  </footer>\n  <script src=\"/js/app.js?v=7\"></script>\n</body>\n</html>")
+    ; __append("\n\n</main>\n  <footer class=\"site-footer\">\n    <div class=\"wrap foot-row\">\n      <span>OTAKUDESU CLEAN · HALLMARK SYSTEM</span>\n      <span>DATA: otakudesu.blog</span>\n    </div>\n  </footer>\n  <script src=\"/js/app.js?v=9\"></script>\n</body>\n</html>")
   return __output;
 
 },
