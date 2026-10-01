@@ -102,22 +102,10 @@
   if (player) {
     var frame = player.querySelector('[data-frame]');
     var loading = player.querySelector('[data-loading]');
-    var current = '';
-    var currentQuality = '720p';
-    var streams = window.__streams || [];
     var groups = window.__groups || [];
-
-    // Collect available qualities: e.g. 1080p, 720p, 480p, 360p
-    var qualitySet = [];
-    ['1080p', '720p', '480p', '360p'].forEach(function (q) {
-      var inGroups = groups.some(function (g) { return g.quality === q; });
-      var inStreams = streams.some(function (s) { return s.quality === q; });
-      if (inGroups || inStreams) qualitySet.push(q);
-    });
-    if (!qualitySet.length) {
-      groups.forEach(function (g) { if (g.quality && qualitySet.indexOf(g.quality) === -1) qualitySet.push(g.quality); });
-      streams.forEach(function (s) { if (s.quality && qualitySet.indexOf(s.quality) === -1) qualitySet.push(s.quality); });
-    }
+    var statusEl = document.querySelector('[data-stream-status]');
+    var serverSelect = document.getElementById('server-select-active');
+    var pills = document.querySelectorAll('.quality-pills .pill-btn');
 
     var conn = navigator.connection || {};
     var isSlow = conn.saveData === true
@@ -125,25 +113,22 @@
       || conn.effectiveType === 'slow-2g'
       || (conn.downlink != null && conn.downlink < 1.2);
 
-    currentQuality = isSlow && qualitySet.indexOf('360p') !== -1
-      ? '360p'
-      : (qualitySet.indexOf('720p') !== -1 ? '720p' : (qualitySet[0] || '360p'));
+    var currentQuality = isSlow ? '360p' : '720p';
 
-    function destroyArt() {
-      if (window.__art) {
-        if (window.__art.hls) {
-          try { window.__art.hls.destroy(); } catch (e) {}
-          window.__art.hls = null;
-        }
-        try { window.__art.destroy(); } catch (e) {}
-        window.__art = null;
+    function setStatus(text) {
+      if (!statusEl) return;
+      if (text) {
+        statusEl.hidden = false;
+        statusEl.textContent = text;
+      } else {
+        statusEl.hidden = true;
       }
     }
 
-    function fallbackIframe(url) {
-      destroyArt();
+    function setFrameSrc(url) {
       if (!url) return;
-      if (loading) loading.hidden = false;
+      var cur = frame.querySelector('iframe');
+      if (cur && cur.src === url) return;
       var el = document.createElement('iframe');
       el.src = url;
       el.title = 'Stream';
@@ -152,279 +137,86 @@
       frame.innerHTML = '';
       frame.appendChild(el);
       if (loading) loading.hidden = true;
-      current = url;
     }
 
-    function setSrc(url) {
-      fallbackIframe(url);
-    }
-
-    function syncDropdowns(q) {
-      player.querySelectorAll('.server-select').forEach(function (s) {
-        if (s.getAttribute('data-quality') === q) {
-          s.parentElement.style.opacity = '1';
-        } else {
-          s.parentElement.style.opacity = '0.55';
-        }
-      });
-    }
-
-    function getPayloadsForQuality(q) {
-      var payloads = [];
-      groups.forEach(function (g) {
-        if (g.quality === q && g.options) {
-          g.options.forEach(function (o) { if (o.payload) payloads.push(o.payload); });
-        }
-      });
-      return payloads.filter(function (v, i, a) { return a.indexOf(v) === i; });
-    }
-
-    async function resolveQualityMedia(targetQ) {
-      var payloads = getPayloadsForQuality(targetQ);
-      if (payloads.length) {
-        try {
-          var res = await fetch('/api/stream-direct-mirror', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ payloads: payloads })
-          });
-          var data = await res.json();
-          if (data && data.success && data.data) {
-            if (data.data.media) return { type: 'media', url: data.data.media, quality: targetQ };
-            if (data.data.src) return { type: 'iframe', url: data.data.src, quality: targetQ };
-          }
-        } catch (e) {}
-      }
-
-      // Direct stream fallback
-      var direct = streams.find(function (s) { return s.quality === targetQ && s.url; });
-      if (direct) {
-        return { type: 'media', url: direct.url, quality: targetQ };
-      }
-
-      return null;
-    }
-
-    function createArt(initialUrl, initialQuality) {
-      destroyArt();
-      var wrap = document.getElementById('art-wrap');
-      if (!window.Artplayer || !wrap) {
-        fallbackIframe(player.getAttribute('data-default') || '');
+    function updateServerDropdown(q) {
+      if (!serverSelect) return;
+      var grp = groups.find(function (g) { return g.quality === q; });
+      serverSelect.innerHTML = '';
+      if (!grp || !grp.options || !grp.options.length) {
+        serverSelect.innerHTML = '<option value="">Server tidak tersedia</option>';
         return;
       }
-
-      currentQuality = initialQuality || currentQuality;
-
-      var selectorList = qualitySet.map(function (q) {
-        return {
-          default: q === currentQuality,
-          html: q.toUpperCase(),
-          value: q
-        };
+      grp.options.forEach(function (opt) {
+        var optEl = document.createElement('option');
+        optEl.value = opt.payload;
+        optEl.textContent = opt.server;
+        serverSelect.appendChild(optEl);
       });
-
-      var controls = [];
-      if (qualitySet.length > 1) {
-        controls.push({
-          name: 'resolution',
-          position: 'right',
-          index: 10,
-          style: { marginRight: '10px' },
-          html: currentQuality.toUpperCase(),
-          tooltip: 'Kualitas Video',
-          selector: selectorList,
-          onSelect: async function (item) {
-            var targetQ = item.value;
-            if (targetQ === currentQuality) return item.html;
-            var art = this;
-            art.notice.show = 'Memuat ' + item.html + '…';
-            try {
-              var resolved = await resolveQualityMedia(targetQ);
-              if (!resolved) {
-                art.notice.show = 'Gagal memuat ' + item.html;
-                return currentQuality.toUpperCase();
-              }
-              if (resolved.type === 'media') {
-                if (art.hls && !/\.m3u8($|\?)/i.test(resolved.url)) {
-                  try { art.hls.destroy(); } catch (e) {}
-                  art.hls = null;
-                }
-                await art.switchQuality(resolved.url);
-                currentQuality = targetQ;
-                syncDropdowns(targetQ);
-                art.notice.show = 'Kualitas: ' + item.html;
-                return item.html;
-              } else if (resolved.type === 'iframe') {
-                fallbackIframe(resolved.url);
-                return item.html;
-              }
-            } catch (err) {
-              art.notice.show = 'Error: ' + err.message;
-              return currentQuality.toUpperCase();
-            }
-            return item.html;
-          }
-        });
-      }
-
-      window.__art = new Artplayer({
-        container: '#art-wrap',
-        url: initialUrl,
-        theme: '#b94a1e',
-        autoSize: false,
-        playbackRate: true,
-        screenshot: true,
-        setting: true,
-        fullscreen: true,
-        fullscreenWeb: true,
-        mini: true,
-        fastForward: true,
-        lock: true,
-        pip: true,
-        airplay: true,
-        lang: 'en',
-        controls: controls,
-        customType: {
-          m3u8: function (video, src, art) {
-            if (art.hls) {
-              try { art.hls.destroy(); } catch (e) {}
-              art.hls = null;
-            }
-            if (window.Hls && window.Hls.isSupported()) {
-              var hls = new window.Hls({ maxBufferLength: 30 });
-              hls.loadSource(src);
-              hls.attachMedia(video);
-              art.hls = hls;
-              art.on('destroy', function () {
-                try { hls.destroy(); } catch (e) {}
-              });
-              return;
-            }
-            if (video.canPlayType('application/vnd.apple.mpegurl')) {
-              video.src = src;
-            }
-          }
-        }
-      });
-
-      var errorTried = false;
-      window.__art.on('error', async function () {
-        if (!errorTried && qualitySet.length > 1) {
-          errorTried = true;
-          var nextQ = currentQuality === '720p' ? '480p' : (currentQuality === '480p' ? '360p' : '720p');
-          if (window.__art && window.__art.notice) {
-            window.__art.notice.show = 'Mencoba mirror ' + nextQ.toUpperCase() + '…';
-          }
-          try {
-            var alt = await resolveQualityMedia(nextQ);
-            if (alt && alt.type === 'media') {
-              if (window.__art.hls && !/\.m3u8($|\?)/i.test(alt.url)) {
-                try { window.__art.hls.destroy(); } catch (e) {}
-                window.__art.hls = null;
-              }
-              await window.__art.switchQuality(alt.url);
-              currentQuality = nextQ;
-              syncDropdowns(nextQ);
-              window.__art.notice.show = 'Kualitas: ' + nextQ.toUpperCase();
-              return;
-            }
-          } catch (e) {}
-        }
-        fallbackIframe(player.getAttribute('data-default') || '');
-      });
-
-      if (loading) loading.hidden = true;
-      syncDropdowns(currentQuality);
     }
 
-    function playMedia(url) {
-      if (window.__art && window.__art.isReady) {
-        if (window.__art.hls && !/\.m3u8($|\?)/i.test(url)) {
-          try { window.__art.hls.destroy(); } catch (e) {}
-          window.__art.hls = null;
-        }
-        window.__art.switchQuality(url);
-      } else {
-        createArt(url, currentQuality);
-      }
-    }
-
-    async function initPlayer() {
+    function switchStream(payload, label) {
+      if (!payload) return;
+      setStatus('MEMUAT ' + (label || '').toUpperCase() + '…');
       if (loading) loading.hidden = false;
-
-      // 1. Resolve preferred quality from mirrors (real 720p/480p/360p without 403 IP-lock)
-      if (groups.length) {
-        try {
-          var res = await resolveQualityMedia(currentQuality);
-          if (res && res.type === 'media') {
-            createArt(res.url, currentQuality);
-            return;
+      fetch('/api/stream-resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payload: payload }),
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data && data.success && data.data && data.data.src) {
+            setFrameSrc(data.data.src);
+            setStatus('');
+          } else {
+            setStatus('Server tidak merespons.');
+            if (loading) loading.hidden = true;
           }
-          if (res && res.type === 'iframe') {
-            fallbackIframe(res.url);
-            return;
-          }
-        } catch (e) {
-          console.error('Mirror resolve failed:', e);
-        }
-      }
-
-      // 2. Direct streams fallback (if mirrors empty)
-      var direct = streams.find(function (s) { return s.quality === currentQuality && s.url; })
-        || streams.find(function (s) { return s.quality === '720p' && s.url; })
-        || streams[0];
-
-      if (direct && direct.url) {
-        createArt(direct.url, direct.quality);
-        return;
-      }
-
-      // 3. Fallback to default iframe
-      var def = player.getAttribute('data-default') || '';
-      if (def) {
-        fallbackIframe(def);
-      } else {
-        if (loading) loading.hidden = true;
-      }
+        })
+        .catch(function () {
+          setStatus('Gagal menghubungi server.');
+          if (loading) loading.hidden = true;
+        });
     }
 
-    initPlayer();
-
-    // Sync external server selects
-    player.querySelectorAll('.server-select').forEach(function (sel) {
-      sel.addEventListener('change', function () {
-        var payload = sel.value;
-        if (!payload) return;
-        var q = sel.getAttribute('data-quality') || currentQuality;
-        var payloads = [payload];
-        sel.querySelectorAll('option').forEach(function (o) { if (o.value && o.value !== payload) payloads.push(o.value); });
-        if (loading) loading.hidden = false;
-        fetch('/api/stream-direct-mirror', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ payload: payload, payloads: payloads }),
-        })
-          .then(function (r) { return r.json(); })
-          .then(function (data) {
-            if (data && data.success && data.data && data.data.media) {
-              if (window.__art && window.__art.isReady) {
-                currentQuality = q;
-                if (window.__art.hls && !/\.m3u8($|\?)/i.test(data.data.media)) {
-                  try { window.__art.hls.destroy(); } catch (e) {}
-                  window.__art.hls = null;
-                }
-                window.__art.switchQuality(data.data.media);
-                syncDropdowns(q);
-              } else {
-                createArt(data.data.media, q);
-              }
-            } else if (data && data.success && data.data && data.data.src) {
-              fallbackIframe(data.data.src);
-            } else if (loading) { loading.hidden = true; }
-          })
-          .catch(function () { if (loading) loading.hidden = true; });
+    pills.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var q = btn.getAttribute('data-quality');
+        if (!q) return;
+        currentQuality = q;
+        pills.forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        updateServerDropdown(q);
+        var firstPayload = serverSelect && serverSelect.value;
+        if (firstPayload) {
+          switchStream(firstPayload, q);
+        }
       });
     });
+
+    if (serverSelect) {
+      serverSelect.addEventListener('change', function () {
+        var payload = serverSelect.value;
+        var optText = serverSelect.options[serverSelect.selectedIndex] ? serverSelect.options[serverSelect.selectedIndex].text : '';
+        switchStream(payload, currentQuality + ' ' + optText);
+      });
+    }
+
+    // Set initial quality pill & server dropdown
+    var initialBtn = document.querySelector('.quality-pills .pill-btn[data-quality="' + currentQuality + '"]')
+      || document.querySelector('.quality-pills .pill-btn');
+
+    if (initialBtn) {
+      pills.forEach(function (b) { b.classList.remove('active'); });
+      initialBtn.classList.add('active');
+      var q = initialBtn.getAttribute('data-quality') || '360p';
+      updateServerDropdown(q);
+      // Auto-switch to 720p on fast connection if available
+      if (q !== '360p' && serverSelect && serverSelect.value) {
+        switchStream(serverSelect.value, q);
+      }
+    }
 
     if (isSlow) {
       var note = document.createElement('p');

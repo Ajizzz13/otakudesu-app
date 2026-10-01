@@ -15,13 +15,7 @@
 
     <div class="player" data-player data-default="<%= ep.defaultStreamingUrl %>">
       <div class="player-frame" data-frame>
-        <% if (ep.streams.length || groups.length) { %>
-          <div id="art-wrap"></div>
-          <script>
-            window.__streams = <%- JSON.stringify(ep.streams || []) %>;
-            window.__groups = <%- JSON.stringify(groups || []) %>;
-          </script>
-        <% } else if (ep.defaultStreamingUrl) { %>
+        <% if (ep.defaultStreamingUrl) { %>
           <iframe src="<%= ep.defaultStreamingUrl %>" title="Stream" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
         <% } else { %>
           <div class="player-empty"><span>LOST FEED</span></div>
@@ -29,19 +23,33 @@
       </div>
       <div class="player-loading" data-loading hidden>LOADING FEED…</div>
     </div>
+    <script>
+      window.__groups = <%- JSON.stringify(groups || []) %>;
+    </script>
 
     <% if (groups.length) { %>
-      <div class="server-row" role="group" aria-label="Server">
-        <% groups.forEach((g) => { %>
-          <div class="server-group">
-            <label class="server-label" for="server-<%= g.quality.replace(/\W/g, '') %>"><%= g.quality %></label>
-            <select class="server-select" id="server-<%= g.quality.replace(/\W/g, '') %>" data-quality="<%= g.quality %>">
-              <% g.options.forEach((o) => { %>
+      <div class="player-toolbar" role="toolbar" aria-label="Kontrol Resolusi dan Server">
+        <div class="toolbar-section">
+          <span class="toolbar-label">RESOLUSI</span>
+          <div class="quality-pills" role="group" aria-label="Pilih Resolusi">
+            <% groups.forEach((g) => { %>
+              <button type="button" class="pill-btn" data-quality="<%= g.quality %>">
+                <%= g.quality.toUpperCase() %>
+              </button>
+            <% }) %>
+          </div>
+        </div>
+        <div class="toolbar-section">
+          <span class="toolbar-label">SERVER</span>
+          <select class="server-dropdown" id="server-select-active" aria-label="Pilih Server">
+            <% if (groups[0] && groups[0].options) { %>
+              <% groups[0].options.forEach((o) => { %>
                 <option value="<%= o.payload %>"><%= o.server %></option>
               <% }) %>
-            </select>
-          </div>
-        <% }) %>
+            <% } %>
+          </select>
+        </div>
+        <span class="toolbar-status" data-stream-status hidden></span>
       </div>
     <% } %>
 
@@ -70,10 +78,5 @@
     </aside>
   <% } %>
 </div>
-
-<% if (ep.streams.length || groups.length) { %>
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/artplayer@5/dist/artplayer.min.js"></script>
-<% } %>
 
 <%- include('partials/footer') %>

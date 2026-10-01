@@ -342,6 +342,7 @@ async function deepResolveMirror(payload) {
   let media = '';
   try {
     const res = await fetch(src, {
+      signal: AbortSignal.timeout(4000),
       headers: {
         'User-Agent': UAS[0],
         'Accept': 'text/html,application/xhtml+xml,*/*;q=0.8',
