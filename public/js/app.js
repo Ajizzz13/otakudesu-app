@@ -110,9 +110,9 @@
     // Collect available qualities: e.g. 1080p, 720p, 480p, 360p
     var qualitySet = [];
     ['1080p', '720p', '480p', '360p'].forEach(function (q) {
-      var inStreams = streams.some(function (s) { return s.quality === q; });
       var inGroups = groups.some(function (g) { return g.quality === q; });
-      if (inStreams || inGroups) qualitySet.push(q);
+      var inStreams = streams.some(function (s) { return s.quality === q; });
+      if (inGroups || inStreams) qualitySet.push(q);
     });
     if (!qualitySet.length) {
       groups.forEach(function (g) { if (g.quality && qualitySet.indexOf(g.quality) === -1) qualitySet.push(g.quality); });
@@ -176,32 +176,32 @@
           g.options.forEach(function (o) { if (o.payload) payloads.push(o.payload); });
         }
       });
-      groups.forEach(function (g) {
-        if (g.quality !== q && g.options) {
-          g.options.forEach(function (o) { if (o.payload) payloads.push(o.payload); });
-        }
-      });
       return payloads.filter(function (v, i, a) { return a.indexOf(v) === i; });
     }
 
     async function resolveQualityMedia(targetQ) {
+      var payloads = getPayloadsForQuality(targetQ);
+      if (payloads.length) {
+        try {
+          var res = await fetch('/api/stream-direct-mirror', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ payloads: payloads })
+          });
+          var data = await res.json();
+          if (data && data.success && data.data) {
+            if (data.data.media) return { type: 'media', url: data.data.media, quality: targetQ };
+            if (data.data.src) return { type: 'iframe', url: data.data.src, quality: targetQ };
+          }
+        } catch (e) {}
+      }
+
+      // Direct stream fallback
       var direct = streams.find(function (s) { return s.quality === targetQ && s.url; });
       if (direct) {
         return { type: 'media', url: direct.url, quality: targetQ };
       }
-      var payloads = getPayloadsForQuality(targetQ);
-      if (!payloads.length) return null;
 
-      var res = await fetch('/api/stream-direct-mirror', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ payloads: payloads })
-      });
-      var data = await res.json();
-      if (data && data.success && data.data) {
-        if (data.data.media) return { type: 'media', url: data.data.media, quality: targetQ };
-        if (data.data.src) return { type: 'iframe', url: data.data.src, quality: targetQ };
-      }
       return null;
     }
 
@@ -307,7 +307,29 @@
         }
       });
 
-      window.__art.on('error', function () {
+      var errorTried = false;
+      window.__art.on('error', async function () {
+        if (!errorTried && qualitySet.length > 1) {
+          errorTried = true;
+          var nextQ = currentQuality === '720p' ? '480p' : (currentQuality === '480p' ? '360p' : '720p');
+          if (window.__art && window.__art.notice) {
+            window.__art.notice.show = 'Mencoba mirror ' + nextQ.toUpperCase() + '…';
+          }
+          try {
+            var alt = await resolveQualityMedia(nextQ);
+            if (alt && alt.type === 'media') {
+              if (window.__art.hls && !/\.m3u8($|\?)/i.test(alt.url)) {
+                try { window.__art.hls.destroy(); } catch (e) {}
+                window.__art.hls = null;
+              }
+              await window.__art.switchQuality(alt.url);
+              currentQuality = nextQ;
+              syncDropdowns(nextQ);
+              window.__art.notice.show = 'Kualitas: ' + nextQ.toUpperCase();
+              return;
+            }
+          } catch (e) {}
+        }
         fallbackIframe(player.getAttribute('data-default') || '');
       });
 
@@ -328,19 +350,10 @@
     }
 
     async function initPlayer() {
-      // 1. Direct streams if available
-      var direct = streams.find(function (s) { return s.quality === currentQuality && s.url; })
-        || streams.find(function (s) { return s.quality === '720p' && s.url; })
-        || streams[0];
+      if (loading) loading.hidden = false;
 
-      if (direct && direct.url) {
-        createArt(direct.url, direct.quality);
-        return;
-      }
-
-      // 2. Resolve preferred quality from mirrors
+      // 1. Resolve preferred quality from mirrors (real 720p/480p/360p without 403 IP-lock)
       if (groups.length) {
-        if (loading) loading.hidden = false;
         try {
           var res = await resolveQualityMedia(currentQuality);
           if (res && res.type === 'media') {
@@ -351,7 +364,19 @@
             fallbackIframe(res.url);
             return;
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error('Mirror resolve failed:', e);
+        }
+      }
+
+      // 2. Direct streams fallback (if mirrors empty)
+      var direct = streams.find(function (s) { return s.quality === currentQuality && s.url; })
+        || streams.find(function (s) { return s.quality === '720p' && s.url; })
+        || streams[0];
+
+      if (direct && direct.url) {
+        createArt(direct.url, direct.quality);
+        return;
       }
 
       // 3. Fallback to default iframe
