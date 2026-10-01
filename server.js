@@ -120,10 +120,18 @@ app.post('/api/stream-direct', express.json(), safe(async (req, res) => {
 }));
 
 app.post('/api/stream-direct-mirror', express.json(), safe(async (req, res) => {
-  const { payload } = req.body || {};
-  if (!payload) return res.status(400).json({ success: false, error: 'payload required' });
-  const { src, media } = await deepResolveMirror(payload);
-  res.json({ success: true, data: { src, media } });
+  const body = req.body || {};
+  const list = Array.isArray(body.payloads) ? body.payloads : (body.payload ? [body.payload] : []);
+  if (!list.length) return res.status(400).json({ success: false, error: 'payload required' });
+  const tried = [];
+  for (const payload of list) {
+    try {
+      const { src, media } = await deepResolveMirror(payload);
+      tried.push({ src, media: media || '' });
+      if (media) return res.json({ success: true, data: { src, media } });
+    } catch (e) { tried.push({ error: e.message }); }
+  }
+  res.json({ success: true, data: { src: (tried[0] && tried[0].src) || '', media: '', tried } });
 }));
 
 app.listen(PORT, () => console.log(`otakudesu-clean running on http://localhost:${PORT}`));

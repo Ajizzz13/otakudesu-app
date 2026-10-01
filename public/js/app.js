@@ -184,9 +184,11 @@
         setSrc(player.getAttribute('data-default') || '');
         return;
       }
+      var isHls = /\.m3u8($|\?)/i.test(url);
       window.__art = new Artplayer({
         container: '#art-wrap',
         url: url,
+        type: isHls ? 'm3u8' : (/\.mp4($|\?)/i.test(url) ? 'mp4' : ''),
         theme: '#b94a1e',
         autoSize: false,
         playbackRate: true,
@@ -200,6 +202,19 @@
         pip: true,
         airplay: true,
         lang: 'en',
+        customType: {
+          m3u8: function (video, src) {
+            if (window.Hls && window.Hls.isSupported()) {
+              var hls = new window.Hls({ maxBufferLength: 30 });
+              hls.loadSource(src);
+              hls.attachMedia(video);
+              return;
+            }
+            if (video.canPlayType('application/vnd.apple.mpegurl')) {
+              video.src = src;
+            }
+          },
+        },
       });
       window.__art.on('error', function () {
         fallbackIframe(player.getAttribute('data-default') || '');
@@ -211,11 +226,18 @@
       sel.addEventListener('change', function () {
         var payload = sel.value;
         if (!payload) return;
+        var payloads = [];
+        sel.querySelectorAll('option').forEach(function (o) { if (o.value) payloads.push(o.value); });
+        player.querySelectorAll('.server-select').forEach(function (other) {
+          if (other === sel) return;
+          other.querySelectorAll('option').forEach(function (o) { if (o.value) payloads.push(o.value); });
+        });
+        payloads = payloads.filter(function (v, i) { return payloads.indexOf(v) === i; });
         if (loading) loading.hidden = false;
         fetch('/api/stream-direct-mirror', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ payload: payload }),
+          body: JSON.stringify({ payload: payload, payloads: payloads }),
         })
           .then(function (r) { return r.json(); })
           .then(function (data) {

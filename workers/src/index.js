@@ -144,10 +144,17 @@ const routes = [
   }) },
   { pattern: /^\/api\/stream-direct-mirror$/, method: 'POST', handler: safe(async (req) => {
     const body = await req.json().catch(() => ({}));
-    const { payload } = body;
-    if (!payload) return json(400, { success: false, error: 'payload required' });
-    const { src, media } = await deepResolveMirror(payload);
-    return json(200, { success: true, data: { src, media } });
+    const list = Array.isArray(body.payloads) ? body.payloads : (body.payload ? [body.payload] : []);
+    if (!list.length) return json(400, { success: false, error: 'payload required' });
+    const tried = [];
+    for (const payload of list) {
+      try {
+        const { src, media } = await deepResolveMirror(payload);
+        tried.push({ src, media: media || '' });
+        if (media) return json(200, { success: true, data: { src, media } });
+      } catch (e) { tried.push({ error: e.message }); }
+    }
+    return json(200, { success: true, data: { src: (tried[0] && tried[0].src) || '', media: '', tried } });
   }) },
   { pattern: /^\/css\/tokens\.css$/, handler: () => new Response(assets['css/tokens.css'], { headers: { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } }) },
   { pattern: /^\/css\/style\.css$/, handler: () => new Response(assets['css/style.css'], { headers: { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } }) },

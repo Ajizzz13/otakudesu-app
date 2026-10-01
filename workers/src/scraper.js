@@ -253,34 +253,85 @@ async function getNonce() {
   return nonce;
 }
 
+function splitPackerArgs(str) {
+  const out = [];
+  let cur = '';
+  let quote = '';
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+    if (quote) {
+      if (ch === '\\') { cur += ch + (str[i + 1] || ''); i++; continue; }
+      if (ch === quote) { quote = ''; continue; }
+      cur += ch;
+    } else if (ch === '"' || ch === "'") {
+      quote = ch;
+    } else if (ch === ',') {
+      out.push(cur); cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  out.push(cur);
+  return out;
+}
+
+function unpackDeanEdwards(html) {
+  const m = html.match(/eval\(function\(p,a,c,k,e,[a-z]+\)\{[\s\S]*?\}\s*\(([\s\S]*)\)\)/);
+  if (!m) return html;
+  try {
+    const parts = splitPackerArgs(m[1]);
+    const p = parts[0];
+    const a = parseInt(parts[1], 10) || 36;
+    const c = parseInt(parts[2], 10);
+    const k = String(parts[3] || '').split('|');
+    const e = (n) => (n < a ? '' : e(Math.floor(n / a))) + ((n = n % a) > 35 ? String.fromCharCode(n + 29) : n.toString(36));
+    let result = p;
+    for (let i = c - 1; i >= 0; i--) {
+      if (k[i]) result = result.split(new RegExp('\\b' + e(i) + '\\b', 'g')).join(k[i]);
+    }
+    return result;
+  } catch { return html; }
+}
+
 function extractMedia(html) {
-  const cleaned = html
+  const cleaned = unpackDeanEdwards(html)
     .replace(/&quot;/g, '"')
     .replace(/&amp;/g, '&')
     .replace(/&#039;/g, "'")
     .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>');
+    .replace(/&gt;/g, '>')
+    .replace(/\\\//g, '/')
+    .replace(/\\u0026/g, '&')
+    .replace(/\\u003d/g, '=')
+    .replace(/\\&/g, '&');
   const patterns = [
-    /"url"\s*:\s*"((?:https?:)?\\?\/\\?\/[^"]+?\.mp4[^"]*)"/,
-    /"url"\s*:\s*"((?:https?:)?\\?\/\\?\/[^"]+?\.m3u8[^"]*)"/,
-    /"file"\s*:\s*"([^"]+\.mp4[^"]*)"/,
-    /"file"\s*:\s*"([^"]+\.m3u8[^"]*)"/,
-    /file\s*:\s*'([^']+\.mp4[^']*)'/,
-    /<video[^>]+src="([^"]+\.mp4[^"]*)"/,
-    /<source[^>]+src="([^"]+\.mp4[^"]*)"/,
-    /<video[^>]+src="([^"]+\.m3u8[^"]*)"/,
-    /<source[^>]+src="([^"]+\.m3u8[^"]*)"/,
+    /"url"\s*:\s*"((?:https?:)?\/\/[^"]+?\.mp4[^"]*)"/,
+    /"file"\s*:\s*"((?:https?:)?\/\/[^"]+?\.mp4[^"]*)"/,
+    /file\s*:\s*'((?:https?:)?\/\/[^']+?\.mp4[^']*)'/,
+    /source\s*:\s*'((?:https?:)?\/\/[^']+?\.mp4[^']*)'/,
+    /<video[^>]+src="((?:https?:)?\/\/[^"]+?\.mp4[^"]*)"/,
+    /<source[^>]+src="((?:https?:)?\/\/[^"]+?\.mp4[^"]*)"/,
+    /"url"\s*:\s*"((?:https?:)?\/\/[^"]+?\.m3u8[^"]*)"/,
+    /"hls[0-9]?"\s*:\s*"((?:https?:)?\/\/[^"]+?\.m3u8[^"]*)"/,
+    /"file"\s*:\s*"((?:https?:)?\/\/[^"]+?\.m3u8[^"]*)"/,
+    /file\s*:\s*'((?:https?:)?\/\/[^']+?\.m3u8[^']*)'/,
+    /<video[^>]+src="((?:https?:)?\/\/[^"]+?\.m3u8[^"]*)"/,
+    /<source[^>]+src="((?:https?:)?\/\/[^"]+?\.m3u8[^"]*)"/,
   ];
   for (const p of patterns) {
-    const m = cleaned.match(p);
-    if (m) {
+    const re = new RegExp(p.source, 'g');
+    let m;
+    while ((m = re.exec(cleaned))) {
       let u = m[1]
         .replace(/\\\//g, '/')
         .replace(/\\u0026/g, '&')
         .replace(/\\u003d/g, '=')
         .replace(/\\&/g, '&');
       if (u.startsWith('//')) u = 'https:' + u;
-      if (/^https?:\/\//.test(u)) return u;
+      if (!/^https?:\/\//.test(u)) continue;
+      const host = u.slice(u.indexOf('//') + 2).split('/')[0];
+      if (!/\.[a-z]{2,}/i.test(host) || /\.split\(/.test(host)) continue;
+      return u;
     }
   }
   return '';

@@ -1,0 +1,105 @@
+name: Compress Episodes
+
+# Kompres video (resolusi tetap, CRF 30) lalu upload sebagai release asset.
+# Output: attachment release, bisa di-stream via objects.githubusercontent.com
+
+on:
+  workflow_dispatch:
+    inputs:
+      slugs:
+        description: 'Episode slug(s), pisah koma (contoh: brhwc-episode-1-sub-indo,brhwc-episode-2-sub-indo)'
+        required: true
+        type: string
+      quality:
+        description: 'Kualitas sumber'
+        required: false
+        default: '360p'
+        type: choice
+        options: ['360p', '480p', '720p']
+      crf:
+        description: 'CRF (makin tinggi makin kecil, 30 = hemat)'
+        required: false
+        default: '30'
+        type: string
+      tag:
+        description: 'Release tag (kosong = auto: compressed-<timestamp>)'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  compress:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Resolve + compress
+        env:
+          SLUGS: ${{ inputs.slugs }}
+          QUALITY: ${{ inputs.quality }}
+          CRF: ${{ inputs.crf }}
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          chmod +x scripts/compress.sh
+          IFS=',' read -ra ARR <<< "$SLUGS"
+          MANIFEST='[]'
+          for raw in "${ARR[@]}"; do
+            slug="$(echo "$raw" | xargs)"
+            [ -z "$slug" ] && continue
+            echo "::group::resolve $slug"
+            if ! node scripts/resolve-media.mjs "$slug" "$QUALITY" > resolve.json; then
+              echo "::warning::resolve gagal: $slug"
+              cat resolve.json || true
+              echo "::endgroup::"
+              continue
+            fi
+            media="$(node -e "process.stdout.write(require('./resolve.json').media||'')")"
+            src="$(node -e "process.stdout.write(require('./resolve.json').src||'')")"
+            echo "src=$src"
+            echo "media=$media"
+            echo "::endgroup::"
+            if [ -z "$media" ]; then
+              echo "::warning::media kosong: $slug"
+              continue
+            fi
+            outfile="out/${slug}.${QUALITY}.mp4"
+            echo "::group::compress $slug"
+            scripts/compress.sh "$media" "$outfile" "$CRF"
+            echo "::endgroup::"
+            size="$(stat -c%s "$outfile")"
+            MANIFEST="$(node -e "
+              const m=JSON.parse(process.argv[1]);
+              m.push({slug:process.argv[2],quality:process.argv[3],src:process.argv[4],asset:process.argv[5],bytes:Number(process.argv[6])});
+              process.stdout.write(JSON.stringify(m));
+            " "$MANIFEST" "$slug" "$QUALITY" "$src" "$(basename "$outfile")" "$size")"
+          done
+          echo "$MANIFEST" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.stringify(JSON.parse(s),null,2)))" > out/manifest.json
+          cat out/manifest.json
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag != '' && inputs.tag || format('compressed-{0}', github.run_number) }}
+          name: Compressed ${{ inputs.quality }} CRF ${{ inputs.crf }}
+          body: |
+            Auto-compressed episodes (resolusi tetap, CRF ${{ inputs.crf }}).
+            Sumber: ${{ inputs.slugs }}
+          files: out/*.mp4
+          fail_on_unmatched_files: false
