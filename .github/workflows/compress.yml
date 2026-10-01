@@ -76,7 +76,7 @@ jobs:
             slug="$(echo "$raw" | xargs)"
             [ -z "$slug" ] && continue
             echo "::group::resolve $slug"
-            CAND_FILE=candidates.json
+            export CAND_FILE=candidates.json
             if [ -n "$MEDIA_IN" ]; then
               printf '%s' "$MEDIA_IN" > "$CAND_FILE"
             else
