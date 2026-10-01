@@ -76,12 +76,12 @@ jobs:
             echo "media=$media"
             echo "::endgroup::"
             if [ -z "$media" ]; then
-              echo "::warning::media kosong: $slug"
+              echo "::warning::media kosong / tidak reachable: $slug"
               continue
             fi
             outfile="out/${slug}.${QUALITY}.mp4"
             echo "::group::compress $slug"
-            scripts/compress.sh "$media" "$outfile" "$CRF"
+            scripts/compress.sh "$media" "$outfile" "$CRF" "$src"
             echo "::endgroup::"
             size="$(stat -c%s "$outfile")"
             MANIFEST="$(node -e "
